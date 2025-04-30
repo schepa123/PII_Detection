@@ -1,0 +1,116 @@
+<prompt>
+    <title>Location extractor</title>
+    <description>
+        Analyze the provided text to extract any mention of a address, district, city, country or continent, adhering to a strict interpretation of the text.
+    </description>
+    <task>
+        <step number="1">Review the text</step>
+        <step number="2">Identify and extract (a) addresses, (b) district names, (c) cities, (d) countries, (e) continents and (f) landmark explicitly mentioned in the text
+        </step>
+        <step number="3">Print all items that you identified</step>
+        <step number="4">Capture the surrounding context for each identified item</step>
+        <step number="5">Categorize the items under the catgories address, district, cities, countries and continents</step>
+        <step number="6">Avoid making inferences or assumptions</step>
+        <step number="7">Present findings in structured JSON format with no comments or annotations in the JSON object.</step>
+    </task>
+    <output_format>
+        <example>
+            <text>
+            A group of tourists traveled from Sydney, Australia. They also made a stop at the Eiffel Tower in Paris, France. During their journey, they stayed at the Hilton Hotel, 123 Main Street, Los Angeles, California, USA. Their itinerary included a brief visit to the district of Brooklyn in New York City. Later, they enjoyed a scenic tour of the European continent. But the enjoyed Los Angeles the most.
+            </text>
+            <result>
+            I found the following items:
+            addresses: 123 Main Street, Los Angeles,
+            district: Brooklyn
+            cities: Sydney, Paris, Los Angeles, New York City
+            countries: Australia, France, USA
+            continents: European Continent
+            landmark: Eiffel Tower
+
+            ```json
+                {
+                "address": [
+                {
+                    "item": "123 Main Street, Los Angeles",
+                    "context": ["During their journey, they stayed at the Hilton Hotel, 123 Main Street, Los Angeles, California, USA."]
+                }
+                ],
+                "district": [
+                {
+                    "item": "Brooklyn",
+                    "context": ["brief visit to the district of Brooklyn in New York City."]
+                }
+                ],
+                "city": [
+                {
+                    "item": "Sydney",
+                    "context": ["A group of tourists traveled from Sydney, Australia."]
+                },
+                {
+                    "item": "Paris",
+                    "context": ["They also made a stop at the Eiffel Tower in Paris, France."]
+                },
+                {
+                    "item": "Los Angeles",
+                    "context": ["they stayed at the Hilton Hotel, 123 Main Street, Los Angeles, California, USA.", "But the enjoyed Los Angeles the most."]
+                },
+                {
+                    "item": "New York City",
+                    "context": ["district of Brooklyn in New York City."]
+                }
+                ],
+                "area": [
+                {
+                    "item": "California",
+                    "context": ["they stayed at the Hilton Hotel, 123 Main Street, Los Angeles, California, USA"]
+                }
+                ]
+                "country": [
+                {
+                    "item": "Australia",
+                    "context": ["A group of tourists traveled from Sydney, Australia."]
+                },
+                {
+                    "item": "France",
+                    "context": ["They also made a stop at the Eiffel Tower in Paris, France."]
+                },
+                {
+                    "item": "USA",
+                    "context": ["During their journey, they stayed at the Hilton Hotel, 123 Main Street, Los Angeles, California, USA."]
+                }
+                ],
+                "continent": [
+                {
+                    "item": "European continent",
+                    "context": ["Later, they enjoyed a scenic tour of the European continent."]
+                }
+                ],
+                "landmark": [
+                {
+                    "item": "Eifel Tower",
+                    "context": ["They also made a stop at the Eiffel Tower in Paris, France"]
+                }
+              ]
+            }
+            </result>
+        </example>
+        <template>
+        I found the items: ...
+        ```json
+        {
+            "address": ["List of dictionaries with 'items' and 'context' keys],
+            "district": ["List of dictionaries with 'items' and 'context' keys],
+            "city": ["List of dictionaries with 'items' and 'context' keys],
+            "area": ["List of dictionaries with 'items' and 'context' keys],
+            "country": ["List of dictionaries with 'items' and 'context' keys]
+            "continent": ["List of dictionaries with 'items' and 'context' keys],
+            "landmark":["List of dictionaries with 'items' and 'context' keys],
+        }
+        </template>
+    </output_format>
+    <guidelines>
+        <point>Extract only explicitly mentioned locations-no assumptions or inferences.</point>
+        <point>The JSON object must be accurate, complete, and contain no comments or annotations.</point>
+        <point>The value of the 'context' keys are lists of all possible context in which the item was found.</point>
+    </guidelines>
+</prompt>

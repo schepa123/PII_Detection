@@ -1,0 +1,103 @@
+<prompt>
+    <title>Location to Individual Linker</title>
+    <description>
+        Analyze the provided text as well as the provided individual and location data to link individuals to locations, adhering to a strict interpretation of the text. A link exists when an individual has any of the following connections to a location: residing in, traveling to, working in, studying in, being born in, dying in, emigrating to, immigrating to, obtaining citizenship of, or having any other direct interaction with the location.
+    </description>
+    <task>
+        <step number="1">Review the text as well as the provided individual and location data</step>
+        <step number="2">Investigate all possible links between the provided individuals and the location data. A link exists if the individual:
+            - Lives, lived, or stayed in the location
+            - Works or worked in the location
+            - Travels or traveled to the location
+            - Was born or died in the location
+            - Obtained citizenship or residency of the location
+            - Emigrated to or immigrated to the location
+            - Had any other direct interaction with the location
+            - Was mentioned in the context of the location
+        </step>
+        <step number="3">Consider all contexts in which a location appears. Any mention of an individual's presence in, movement to, or official connection with a Location constitutes a valid link.</step>
+        <step number="4">Start your response by printing all your findings in the format: "(uuid of person) - (uuid of location)" and add a short explanation, no longer than 1 sentence.</step>
+        <step number="5">Present findings in structured JSON format with no comments or annotations in the JSON object.</step>
+    </task>
+    <output_format>
+        <example>
+            <text>During her holiday, Elisabeth stayed in a hotel near the Eiffel Tower. Because it was off-season, the price was relatively cheap. Liz was delighted because she had always wanted to go to Paris. </text>
+            <person_list>
+                <person_1>
+                    <full_name>Elisabeth Einstein</full_name>
+                    <abbrevations>
+                        <abbrevation></abbrevation>
+                    </abbrevations>
+                    <nick_name_aliases>
+                        <alias>Liz</alias>
+                    </nick_name_aliases>
+                    <uuid>c6263ff1-676c-4492</uuid>
+                </person_1>
+                <person_2>
+                    <full_name>Mileva Maric</full_name>
+                    <abbrevations>
+                        <abbrevation></abbrevation>
+                    </abbrevations>
+                    <nick_name_aliases>
+                        <alias>Mili</alias>
+                    </nick_name_aliases>
+                    <uuid>0a2a1dad-4965-4725</uuid>
+                </person_2>
+            </person_list>
+            <location_list>
+                <location_1>
+                    <name>Paris</name>
+                    <category>city</category>
+                    <context>['Liz was delighted because she had always wanted to go to Paris', 'He was wary of the petty crime in the city center.']</context>
+                    <uuid>29bbba49-bfa0-4db2</uuid>
+                </location_1>
+                <location_2>
+                    <name>Eifel Tower</name>
+                    <category>landmark</category>
+                    <context>['Elisabeth stayed in a hotel near the Eiffel Tower.']</context>
+                    <uuid>c51836d7-3b8d-4537</uuid>
+                </location_2>
+                <location_3>
+                    <name>France</name>
+                    <category>country</category>
+                    <context>['France hosted the UEFA European Championship in 2016.']</context>
+                    <uuid>d2aab6c4-1dd8-436e</uuid>
+                </location_3>
+            </location_list>
+            <result>
+            I found the links:
+            (c6263ff1-676c-4492) - (c51836d7-3b8d-4537) Elisabeth Einstein stayed in a hotel near the Eiffel Tower; (c6263ff1-676c-4492) - (29bbba49-bfa0-4db2) Elisabeth always wanted to go to Paris.
+
+            ```json
+                {
+                    "c6263ff1-676c-4492": [
+                        {"context": "Liz was delighted because she had always wanted to go to Paris",
+                        "uuid": "29bbba49-bfa0-4db2"},
+                        {"context": "Elisabeth stayed in a hotel near the Eiffel Tower.",
+                        "uuid": "c51836d7-3b8d-4537"}
+                    ]
+                }
+            ```
+            </result>
+        </example>
+        <template>
+            I found the links: ... (explainations)
+            ```json
+            {
+                <uuid_of_individual>: {
+                    ["List of dicts with the context copied from the location data and uuid of the location"],
+                }
+                </uuid_of_individual>
+            }
+            ```
+        </template>
+    </output_format>
+    <guidelines>
+        <point>The JSON object must be accurate, complete, and contain no comments or annotations.</point>
+        <point>An individual can be linked to multiple locations and locations to multiple individuals.</point>
+        <point>Match full names, abbreviations, and aliases for persons.</point>
+        <point>Consider citizenship, immigration, emigration, and employment as valid links to a location.</point>
+        <point>Both temporary and permanent connections to a location are valid links.</point>
+        <point>In your JSON object, include the context in which the individual is linked to the location. The context should be copied from the location data set and not be in your own words.</point>
+    </guidelines>
+</prompt>

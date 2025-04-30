@@ -1,0 +1,8 @@
+- Extract both current and historical information.
+- Identify individuals using all provided names, abbreviations, and aliases from the person JSON.
+- Output results in a JSON object following the specified template.
+- Create an entry for each person listed in the person dictionary, even if no information is available for some categories
+- Include contextual information by directly quoting the original text.
+- Create separate entries for each information item, even if adjacent in text.
+- Copy identifiers verbatim from the text without modifications (e.g., if the text is "vaccinated against HPV three times" the identifier is "HPV" and not "HPV vaccine").
+- Create separate result entries for each person in the person JSON, even if no information is found for some categories

@@ -1,0 +1,10 @@
+src/module/__pycache__/*
+*.ipynb
+src/module/__pycache__/llm.cpython-312.pyc
+generated_prompts/*
+logs/*
+Data/Other/whole_document.txt
+src/cli/__pycache__/*
+.env
+Data/Other/*
+src/module/__pycache__/*

@@ -1,0 +1,131 @@
+<prompt>
+<title>Health information extractor</title>
+    <description>
+        Analyze the provided text and list of individuals (with aliases) to extract health information about the provided individuals, adhering to a strict interpretation of the text. 
+    </description>
+    <task>
+        <step number="1">Review the text as well as the provided individuals.</step>
+        <step number="2">Identify and extract information about the following health information:
+            - medication, e.g. any medication the individual is currently taking or has ever taken
+            - medical history, e.g. any medical interventions, procedures, hospitalizations or surgery the patient has undergone
+            - diagnosis, e.g. any illness, be it physical or psychological, from which the individual suffers
+            - blood type, e.g. any mention of the blood type of the individual
+            - vaccination Status, e.g. any mention of the vaccination status of the individual
+            - allergy, e.g. Any mention of a allergy that the individual suffers from
+            - lifestyle factors, e.g. Any mention of lifestyle factors that contribute to health issues</step>
+        <step number="3">Capture the surrounding context for each identified item and extract the identifier.</step>
+        <step number="4">Avoid making inferences or assumptions.</step>
+        <step number="5">Validate extracted information against provided guidelines.</step>
+        <step number="6">Present findings in structured JSON format with no comments or annotations in the JSON object.</step>
+    </task>
+    <output_format>
+        <example>
+            <text>John Smith, also known as Johnny, was diagnosed with Type 2 diabetes last year. He takes Metformin daily to manage his condition. During a routine check-up, his doctor noted that John has a blood type of O-negative and high blood pressure. The doctor told him to stop smoking to reduce his blood pressure. Additionally, he received his annual flu vaccine last month. His wife, Jane Doe, mentioned that John underwent knee replacement surgery in 2018. John's dust allergy has also improved.</text>
+            <person_list>
+                <person_1>
+                    <full_name>John Smith</full_name>
+                    <abbrevations>
+                        <abbrevation></abbrevation>
+                    </abbrevations>
+                    <nick_name_aliases>
+                        <alias>Jonny</alias>
+                        <alias>John</alias>
+                    </nick_name_aliases>
+                    <uuid>c6263ff1-676c-4492</uuid>
+                </person_1>
+                <person_2>
+                    <full_name>Jane Doe</full_name>
+                    <abbrevations>
+                        <abbrevation></abbrevation>
+                    </abbrevations>
+                    <nick_name_aliases>
+                        <alias></alias>
+                    </nick_name_aliases>
+                    <uuid>0a2a1dad-4965-4725</uuid>
+                </person_2>
+            </person_list>
+            <result>
+            ```json
+                {
+                    "c6263ff1-676c-4492": {
+                        "medication": [
+                        {
+                            "context": "He takes Metformin daily to manage his condition",
+                            "identifier": "Metformin"
+                        }
+                        ],
+                        "medical_history": [
+                        {
+                            "context": "John underwent knee replacement surgery in 2018",
+                            "identifier": "knee replacement surgery"
+                        }
+                        ],
+                        "diagnosis": [
+                        {
+                            "context": "was diagnosed with Type 2 diabetes last year",
+                            "identifier": "Type 2 diabetes"
+                        },
+                        {
+                            "context": "his doctor noted that John has a blood type of O-negative and high blood pressure",
+                            "identifier": "high blood pressure",
+                        }
+                        {
+                            "context": "The doctor told him to stop smoking to reduce his blood pressure",
+                            "identifier": "blood pressure",
+                        }
+                        ],
+                        "blood_type": [
+                            {
+                            "context": "his doctor noted that John has a blood type of O-negative",
+                            "identifier": "blood type of O-negative"
+                            }
+                        ],
+                        "vaccination_status": [
+                            {
+                            "context": "he received his annual flu vaccine",
+                            "identifier": "flu vaccine"
+                            }
+                        ],
+                        "lifestyle factors": [
+                            {
+                            "context": "stop smoking to reduce his blood pressure",
+                            "identifier": "smoking"
+                            }
+                        ]
+                        "allergy": [
+                            {
+                            "context": "John's dust allergy has also improved.",
+                            "identifier": "dust allergy"
+                            }
+                        ]
+                    }
+                }
+            ```
+            </result>
+        </example>
+        <template>
+            ```json
+            {
+                <uuid_of_person>: {
+                "medication": ["List of dictionaries with 'context' and 'identifier' keys for medication"],
+                "medical_history": ["List of dictionaries with 'context' and 'identifier' keys for medical history"],
+                "diagnosis": ["List of dictionaries with 'context' and 'identifier' keys for diagnoses"],
+                "blood_type": ["List of dictionaries with 'context' and 'identifier' keys for blood type"],
+                "vaccination_status": ["List of dictionaries with 'context' and 'identifier' keys for vaccination status"],
+                "lifestyle_factors": ["List of dictionaries with 'context' and 'identifier' keys for lifestyle factors"],
+                "allergy": ["List of dictionaries with 'context' and 'identifier' keys for allergies"],
+            }
+            }
+            ```
+        </template>
+    </output_format>
+    <guidelines>
+        <point>The JSON object must be accurate, complete, and contain no comments or annotations.</point>
+        <point>Use the full names, abbreviations, and aliases provided in the person list to identify individuals in the text.</point>
+        <point>Both current or past health information is relevant and should be extracted</point>
+        <point>In your JSON object, include the context in which the individual is linked to a specific health information item. The context should be copied from the orginial text and not be formulated in your own words.</point>
+        <point>In your JSON object only print individuals with health information in the text. If an individual doesn't have health information don't print the key.</point>
+        <point>Never combine several health information items into one entry, even if the items are directly next to each other in the text.</point>
+        <point>Copy and paste the identifier directly from the text and never change it. E.g. if the text is "vaccinated against HPV" the identifier is "HPV" and not "HPV vaccine".</point>
+    </guidelines>
+</prompt>

@@ -1,0 +1,8 @@
+- Always take into account both current and historical information.
+- Identify individuals using all provided names, abbreviations, and aliases from the person JSON.
+- Output results in a JSON object following the specified template.
+- Include contextual information by directly quoting the original text.
+- Even if the informations items are adjacent to each other, handle each separately
+- Copy identifiers verbatim from the text without modifications (e.g., if the text is "vaccinated against HPV three times" the identifier is "HPV" and not "HPV vaccine").
+- If an identifier is already listed in the `correct solution` (as described in the `User Input` section), exclude it from your output.
+- Only output identifiers in your response that aren't present in the `correct solution` list

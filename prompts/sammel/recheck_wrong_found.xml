@@ -1,0 +1,99 @@
+<prompt>
+    <title>Correct wrong person identifier codes</title>
+    <description>
+        You made some errors in extracting identifier codes, government ID numbers, and telephone numbers (hereafter referred to as "identifiers") explicitly linked to individuals. Analyze the provided text, list of individuals (with aliases) and the provided errors to correct yourself.
+    </description>
+    <task>
+        <step number="1">Review the text, list of individuals (including aliases) and the provided erros.</step>
+        <step number="2">Find the place in the text where you made a error by looking at the context of the error.</step>
+        <step number="3">Reason why are made an error there in no more than one sentence.</step>
+        <step number="4">Try to correct the error, avoid making inferences or assumptions—only capture explicitly stated relationships between individuals and identifiers.</step>
+        <step number="5">Update the identifier and the surrounding context if possible, if not then make sure to denote that</step>
+        <step number="6">Present findings in structured JSON format with no comments or annotations in the JSON object.</step>
+    </task>
+    <output_format>
+        <example>
+            <text>
+                Tom Riddle forgot his social security number 33440L but provided 2232964 as his employment number. In Azkaban prison Voldemort was assinged the number 76667. He became a United States citizen in 1940
+            </text>
+            <person_list>
+                <person_1>
+                    <full_name>Tom Riddle</full_name>
+                    <abbrevations>
+                        <abbrevation></abbrevation>
+                    </abbrevations>
+                    <nick_name_aliases>
+                        <alias>Voldemort</alias>
+                    </nick_name_aliases>
+                    <uuid>ce553faa</uuid>
+                </person_1>
+            </person_list>
+            <errors>
+                <error_1>
+                    <context>forgot his social security number 33440L</context>
+                    <identifier>33440L</identifier>
+                    <identifier_typ>telephone_number</identifier_typ>
+                    <person_uuid>ce553faa</person_uuid>
+                </error_1>
+                <error_2>
+                    <context>He became a United States citizen in 1940</context>
+                    <identifier></identifier>
+                    <identifier_typ>code</identifier_typ>
+                    <person_uuid>ce553faa</person_uuid>
+                </error_2>
+                <error_3>
+                    <context>His telephone number was +4656566564</context>
+                    <identifier>+4656566564</identifier>
+                    <identifier_typ>telephone_number</identifier_typ>
+                    <person_uuid>ce553faa</person_uuid>
+                </error_3>
+            </errors>
+            <result>
+                ```json
+                {
+                    "error_1": {
+                        "reason": "I made an error because I misinterpreted the social security number as a telephone number.",
+                        "context": "forgot his social security number 33440L",
+                        "identifier": "33440L",
+                        "identifier_typ": "government_id",
+                        "person_uuid": "ce553faa",
+                        "corrected": true
+                    },
+                    "error_2": {
+                        "reason": "I made a mistake when I tried to extract the code from a later text passage."
+                        "context": "Voldemort was assinged the number 76667",
+                        "identifier": "76667",
+                        "identifier_typ": "government_id",
+                        "person_uuid": "ce553faa",
+                        "corrected": true
+                    },
+                    "error_3": {
+                        "reason": "I made an mistake in extracting a telephone number that wasn't in the text.",
+                        "context": "His telephone number was +4656566564",
+                        "identifier": "+4656566564",
+                        "identifier_typ": "telephone_number",
+                        "person_uuid": "ce553faa",
+                        "corrected": false
+                    }
+                }
+            </result>
+        </example>
+        <template>
+        ```json
+        {
+            "error_number": {
+                "reason": "Reason for the error",
+                "context": "Context of the (corrected) error",
+                "identifier": "Identifier code",
+                "identifier_typ": "Type of identifier",
+                "corrected": true/false
+            }, ...
+        }
+        </template>
+    </output_format>
+    <guidelines>
+        <point>Avoid making inferences or assumptions-only correct the errors you made.</point>
+        <point>The JSON object must be accurate, complete, and contain no comments or annotations.</point>
+        <point>Include a key for every error in the list, even if you could not correct the error.</point>
+    </guidelines>
+</prompt>

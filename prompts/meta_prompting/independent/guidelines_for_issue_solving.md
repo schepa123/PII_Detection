@@ -1,0 +1,8 @@
+- Always take into account both current and historical information.
+- Output results in a JSON object following the specified template.
+- Include contextual information by directly quoting the original text.
+- Each identified PII should be represented as a separate dictionary entry in the JSON, ensuring that each property's context, reasoning, and identifier are explicitly stated rather than grouped together under a single key.
+- Copy identifiers verbatim from the text without modifications (e.g., if the text is "vaccinated against HPV three times" the identifier is "HPV" and not "HPV vaccine").
+- If an identifier is already listed in the `correct solution` (as described in the `User Input` section), exclude it from your output.
+- Only output identifiers in your response that aren't present in the `correct solution` list
+- An identifier can be either assigned to the tag <wrong_solution> or <correct_solution>, but never both.

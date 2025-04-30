@@ -1,0 +1,5 @@
+- Extract both current and historical information.
+- Output results in a JSON object following the specified template.
+- Include contextual information by directly quoting the original text.
+- Create separate entries for each information item, even if adjacent in text.
+- Copy identifiers verbatim from the text without modifications (e.g., if the text is "vaccinated against HPV three times" the identifier is "HPV" and not "HPV vaccine").

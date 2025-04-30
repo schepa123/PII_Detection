@@ -1,0 +1,27 @@
+meta_prompting:
+  general:
+    - prompt_feedback_generation: give_feedback.md
+    - prompt_incoporate_feedback: incorporate_feedback.md
+    - next_instruction_meta: next_instruction_meta.md
+    - next_step_meta: next_step_meta.md
+  independent:
+    - meta_expert_prompt: meta_expert.md
+    - meta_expert_next_step_prompt: meta_expert_next.md
+    - prompt_generation: prompt_generation.md
+    - prompt_example_generation: example_generation.md
+    - prompt_verifying_generation: prompt_verifying_generation.md
+    - prompt_example_verifying_generation: example_verifying_generation.md
+    - prompt_issue_solving: prompt_issue_solving_generation.md
+    - prompt_example_issue_generation: example_generation_issue.md
+    - examples_issue: examples_issue.md
+  individuals:
+    - meta_expert_prompt: meta_expert.md
+    - prompt_generation: prompt_generation.md
+    - prompt_example_generation: example_generation.md
+    - prompt_verifying_generation: prompt_verifying_generation.md
+    - prompt_example_verifying_generation: example_verifying_generation.md
+    - prompt_issue_solving: prompt_issue_solving_generation.md
+    - prompt_example_issue_generation: example_generation_issue.md
+    - examples_issue: examples_issue.md
+  organisations:
+    - temp: temp.md

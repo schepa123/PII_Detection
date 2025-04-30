@@ -1,0 +1,239 @@
+# Doppelstern ist der identifier
+demographics:
+  health:
+    medication:
+      description: Any medication the individual is currently taking or has ever taken
+      example:
+        - John was prescribed <span class="medication">Lormetazepam</span>. 
+        - He takes <span class="medication">Metformin</span> daily to manage his condition.
+        - She was prescribed 10mg of <span class="medication">Citalopram</span>.
+    medical history:
+      description: Any medical interventions, procedures, hospitalizations or surgery the patient has undergone
+      example:
+        - John underwent <span class="medical history">knee replacement surgery</span> in 2018.
+        - To treat his <span class="medical history">dislocated knee, the patient underwent surgery<span>.
+        - She used <span class="medical history">lip fillers</span>last year when she started her modelling career.
+    diagnosis:
+      description: Any mention of an illness, whether physical or mental, from which the individual suffers, whether it is explicitly highlighted or listed alongside other illnesses. This includes both singular and collective references, as long as the text explicitly associates the individual with the disease. This property does not include mentions of medical interventions, procedures, hospitalizations, surgery the patient has undergone, medication the individual is currently taking or has ever taken, vaccination status or the blood type of the individual.
+      example:
+        - He was diagnosed with <span class="diagnosis">Type 2 diabetes</span> last year.
+        - his doctor noted that John has <span class="diagnosis">high blood pressure</span>.
+        - The patient developed severe symptoms of <span class="diagnosis">depression</span>.
+    blood type:
+      description: Any mention of the blood type of the individual.
+      example:
+        - his doctor noted that Mark has a <span class="blood type">blood type of O-negative</span>.
+        - The patient has a <span class="blood type">blood type of A-positive</span>.
+        - She forgot to mention that she has a <span class="blood type">blood type of B-negative</span>
+    vaccination status:
+      description: Any mention of the vaccination status of the individual.
+      example:
+        - He received his annual <span class="vaccination status">flu vaccine</span>.
+        - Smith is <span class="vaccination status">vaccinated 3 times against the coronavirus</span>
+        - Susan was deadly afraid of the needle, but she got her <span class="vaccination status">polio vaccination</span>.
+    allergy:
+      description: Any mention of a allergy that the individual suffers from.
+      example:
+        - Liz hated spring because the <span class="allergy">trees were in blossom and his allergies</span> flared up.
+        - John's <span class="allergy">dust allergy</span> has also improved.
+        - She was allergic to <span class="allergy">peanuts</span>.
+    lifestyle factors:
+      description: Any mention of lifestyle factors that contribute to health issues.
+      example:
+        - Stop <span class="lifestyle factors">smoking</span> to reduce his blood pressure.
+        - The doctor said her liver was getting worse and she should stop <span class="lifestyle factors">drinking alcohol every night</span>.
+        - The patient never exercised and had a <span class="lifestyle factors">sedentary lifestyle</span>.
+  socioeconomic factors:
+    income:
+      description: Any mention of income received by the individual
+      example:
+        - He earned <span class="income">4000 dollars</span> through his YouTube channel last year.
+        - John won a <span class="income">million dollars</span> in the lottery.
+        - Adele <span class="income">earned more than most of her colleagues</span>.
+    housing:
+      description: Any specification of the individual's housing, such as rental apartment or single-family home.
+      example:
+        - He lived in a <span class="housing">big studio apartment</span>.
+        - After years of saving Jackson could finally finance a <span class="housing">single-family home</span> in the suburbs.
+        - Jenny lived in a <span class="housing">rental apartment</span> in London.
+    neighborhood:
+      description: Any specification of the residential neighbourhood of the individual
+      example:
+        - Smith lived in a <span class="neighborhood">crime-ridden neighbourhood</span> in his youth.
+        - Mark had to move after his neighbourhood became <span class="neighborhood">gentrified</span>.
+        - He missed his old <span class="neighborhood">quiet neighbourhood</span>.
+    social class:
+      description: Any specification of the individual's social class
+      example:
+        - He had a typical <span class="social class">working class</span> childhood.
+        - Hazel was very aware of her <span class="social class">upper class</span> upbringing.
+        - Edith learned from a young age to show her <span class="social class">aristocratic origin</span>.
+  residence:
+    Finished: False
+  emotional description:
+    temperament:
+      description: Any mention of the individual's temperament
+      example:
+        - John was always so <span class="temperament">melancholic</span>.
+        - Normally Jackson was already very <span class="temperament">short tempered</span> but with all the stress he was unbearable.
+        - Liz always managed to stay <span class="temperament">calm</span> when her boss was shouting at her.
+    emotions and moods:
+      description: Any mention of the emotions expressed by the individual
+      example:
+        - The death of his mother left him in a state of <span class="emotions and moods">extreme sadness</span> for months.
+        - Jenny was <span class="emotions and moods">overjoyed</span> when she won the lottery.
+        - She was <span class="emotions and moods">furious</span> when she found out that her boyfriend had cheated on her.
+    behavior:
+      description: The general behavior expressed by the individual
+      example:
+        - When Mark was nervous, he often <span class="behavior">bit his nails</span>.
+        - Zizek always <span class="behavior">touched his nose</span> when discussing.
+        - When Hazel was lying, she always <span class="behavior">looked to the left</span>.
+  member of:
+    Finished: False
+  physical description:
+    height:
+      description: Any mention of the height of the individual
+      example:
+        - As a 5-year-old Wesley was only <span class="physical description">50 centimetres</span> tall.
+        - One of her dating criteria was that the boy has to be at least <span class="physical description">180 cm</span> tall.
+        - The patient was <span class="physical description">1.70 meters</span> tall.
+    weight:
+      description: Any mention of the weight of the individual
+      example:
+        - As James was <span class="weight">obese</span> he had several health problems. 
+        - After a lot of effort, she managed to lose <span class="weight">20 kilos</span>.
+        - The patient weighed <span class="weight">80 kilograms</span>.
+    hair and beard style:
+      description: Any mention of the individual's beard or hairstyle
+      example:
+        - With his <span class="hair and beard style">hair in a bun and a long beard</span> Jackson is a typical hipster.
+        - Dora always hated her <span class="hair and beard style">long hair</span> as a child.
+        - John grew a <span class="hair and beard style">moustache</span> to be more successful with women.
+    hair colour:
+      description: Any mention of the individual's hair colour
+      example:
+        - Emily has dyed her hair <span class="hair colour">blonde</span>.
+        - Kpop idols dye their hair <span class="hair colour">blonde</span> and use that as a basis for other hair colours.
+        - As I got older my hair turned <span class="hair colour">grey</span>.
+    eye colour:
+      description: Any mention of the individual's eye colour
+      example:
+        - She had <span class="eye colour">deep blue</span> eyes, like the sea after a storm.
+        - His <span class="eye colour">green</span> eyes were the first thing you noticed about Mark.
+        - After crying for hours, her <span class="eye colour">brown</span> eyes were red and swollen.
+    skin colour:
+      decription: Any mention of the individual's skin colour
+      example:
+        - Edith looked like a typical irishwoman with her <span class="skin colour">pale</span> skin and freckles.
+        - The elves have <span class="skin colour">bright skin</span>, like the moon on a cloudless night.
+        - The <span class="skin colour">light brown</span> skin of the patient was a sign of his mixed heritage. 
+    attractiveness:
+      description: Any mention of the individual's attractiveness
+      example:
+        - Maggy was a <span class="attractiveness">ugly duckling</span> in high school.
+        - John was always considered <span class="attractiveness">handsome</span>.
+        - After a lot of training, he looked <span class="attractiveness">fit</span>.
+  heritage:
+    languages spoken:
+      description: Any mention of the languages in which the individual is proficient or able to communicate
+      example:
+        - He started learning to speak <span class="languages spoken">Danish</span> when he was 14 years old.
+        - Mark tried to find a tandem partner to learn <span class="languages spoken">Dutch</span>.
+        - Elisabeth work at as a <span class="languages spoken">English</span> Teacher in Japan for 10 years.
+    childhood description:
+      description: Any mention of how the individual experienced the childhood
+      example:
+        - He was <span class="childhood description">raised in the Urban jungle of Hongkong</span>.
+        - Jackson was <span class="childhood description">abandoned by his parents</span> at the age of 5.
+        - When Jenny moved to the city, she was happy to escape the <span class="childhood description">stifling atmosphere of the countryside</span>.
+    countries resided in:
+      description: Any mention of a country in which the individual resided, regardless of whether it is explicitly highlighted or listed alongside other countries. This includes both singular and collective mentions as long as the text explicitly associates the individual with residing in the country.
+      example:
+        - He was a true cosmopolitan and lived, among others, in <span class="countries resided in">China</span>.
+        #- Liz moved here to <span class="countries resided in">Germany</span> to study.
+        #- John had to move to <span class="countries resided in">Japan</span> for buisness reasons. 
+    nationality:
+      description: Any mention of the nationality of the individual
+      example:
+        - Albert renounced his <span class="nationality">German</span> citizenship.
+        - Frank met with his fellow countrymen in the <span class="nationality">Austrian</span> embassy.
+        - Because of her <span class="nationality">Iranian</span> citizenship, she couldn't get a visa for the US.
+    ethnicity:
+      description: Any mention of the ethnicity of the individual
+      example:
+        - Daniel was a member of the <span class="ethnicity">Hungarian</span> minority in Austria.
+        - He brought a claim against the company for racial discrimination on the grounds of his status as an <span class="ethnicity">African American</span>.
+        - As a <span class="ethnicity">kurd</span> in Turkey, Jackson was often discriminated against by the police.
+    race:
+      description: Any mention of the race of the individual
+      example:
+        - Even though Michael was <span class="race">black</span>, he was raised by white parents, because his parents died in a car accident.
+        - He tried to hide his <span class="race">asian</span> roots.
+        - As Benedikt was the only <span class="race">white</span> person most Chinese people in Chengdu had ever seen, he was stared at.
+  professional life:
+    finished: False
+  Education:
+    finished: False
+  Relation with other Individuals:
+    finished: False
+  worldview:
+    political stance:
+      description: Any mention of the political stance of the individual
+      example:
+        - She was a member of the <span class="political stance">social democrats</span>.
+        - Lenin was founder of the <span class="political stance">communist</span> international.
+        - Hazel was active in the <span class="political stance">conservative</span> party.
+    religion:
+      description: Any mention of the religion to which the individual belongs.
+      example:
+        - She was raised <span class="religion">Roman Catholic</span>.
+        - Becuase Daniel was <span class="religion">jewish</span>, he couldn't eat pork.
+        - Jacob was trying to convert his girlfriend to <span class="religion">Buddhism</span>.
+  gender and sexual orientation:
+    gender:
+      description: Any mention of the gender of the individual
+      example:
+        - Liz was the only <span class="gender">female</span> player in the chess club.
+        - Mark was trying to be more <span class="gender">masculine</span> and gaining more muscles.
+        - Jenny was annoyed at having to maintain a <span class="gender">feminine</span> style in the shop.
+    sexual orientation:
+      description: Any mention of the sexual orientation of the individual
+      example:
+        - She was in a <span class="sexual orientation">lesbian</span> relationship.
+        - Even though John was <span class="sexual orientation">straight</span>, he loved the music at gay clubs.
+        - Jackson was in an open relationship with <span class="sexual orientation">both man and woman</span>.
+  family:
+    family size:
+      description: Any mention of the size of the individual's family
+      example:
+        - He was the youngest of <span class="family size">5 siblings</span>.
+        - Clark was an only child, his parents had no siblings, so the family was <span class="family size">very small</span>.
+        - John had a <span class="family size">big family</span>, but he was a shy person so he feeled overwhelmed at family gatherings.
+    marital status:
+      description: Any mention of the marital Status of the individual
+      example:
+        - Ross was <span class="marital status">divorced</span> 3 times.
+        - Albert and Susan <span class="marital status">married</span> in a church, with only close friends and family.
+        - She was <span class="marital status">single</span> and happy about it.
+  age:
+    finished: False
+date:
+  description of date:
+    description: A description of a date
+    example:
+      - The <span class="description of date">third of October five years</span> ago he met his wife.
+      - In the <span class="description of date">weeks following the elections</span> many people were **on edge**.
+      - John was on holiday <span class="description of date">last year</span>.
+  date:
+    description: A date expressed in the conventional format
+    example:
+      - Mark's death was on <span class="date">03/10/2019</span>.
+      - The patient was born on <span class="date">12/12/1990</span>.
+      - On <span class="date">12-12-2005</span> the church was opened.
+  duration:
+    description: Any description that designate a time span.
+    example:
+      - For <span class="duration">seven years</span> he tried to get a date with her.
+      - After <span class="duration">2 years</span> of dating, they moved in together.
+      - After the accident, he was in a coma for <span class="duration">3 months</span>.
