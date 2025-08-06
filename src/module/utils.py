@@ -13,6 +13,38 @@ from . import llm_agents_static
 from . import llm_agents
 
 
+
+def get_cwd() -> str:
+    """
+    Returns the current working directory.
+
+    Args:
+        None.
+
+    Returns:
+        str: The current working directory.
+    """
+    return os.path.realpath(os.path.join(
+        os.getcwd(), os.path.dirname(__file__)
+    ))
+
+
+def return_root_dir() -> str:
+    """
+    Returns the root directory of the project.
+
+    Args:
+        None.
+
+    Returns:
+        str: The root directory of the project.
+    """
+    path = get_cwd()
+    return os.path.dirname(
+        os.path.dirname(path)
+    )
+
+
 def get_property_information(
     yml: dict,
     pii_name: str = None
