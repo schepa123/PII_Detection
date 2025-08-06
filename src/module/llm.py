@@ -230,12 +230,15 @@ class LLMAgent:
                     return json.loads(
                         re.search(r"```(.*?)```", response, re.DOTALL).group(1)
                     )
-                except (AttributeError, json.JSONDecodeError, IndexError) as e:
-                    print(f"""
-                    Json could not be found for response:
-                    {response}
-                    """)
-                    raise e
+                except (AttributeError, json.JSONDecodeError, IndexError):
+                    try:
+                        return json.loads(response)
+                    except (AttributeError, json.JSONDecodeError, IndexError) as e:
+                        print(f"""
+                        Json could not be found for response:
+                        {response}
+                        """)
+                        raise e
 
     def load_yml(
         self,

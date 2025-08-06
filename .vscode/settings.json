@@ -2,8 +2,12 @@
     ".xml*": "xml"
 },
 "github.copilot.enable": {
-    "*": true,
-    // ...
+    "*": false,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false,
+    "txt": false,
     "xml": false,
+    "js": false
 }
 }

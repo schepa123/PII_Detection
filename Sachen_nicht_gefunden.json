@@ -1,0 +1,116 @@
+
+# Sachen nicht gefunden
+
+```json
+{
+    "entity_type": "ORG",
+    "entity_mention_id": "001-60605_a3_em8",
+    "start_offset": 431,
+    "end_offset": 448,
+    "span_text": "Danish Government",
+    "edit_type": "check",
+    "confidential_status": "NOT_CONFIDENTIAL",
+    "identifier_type": "NO_MASK",
+    "entity_id": "001-60605_a3_e8"
+}
+
+{
+    "entity_type": "ORG",
+    "entity_mention_id": "001-60605_a3_em28",
+    "start_offset": 2336,
+    "end_offset": 2366,
+    "span_text": "Danish immigration authorities",
+    "edit_type": "insert",
+    "confidential_status": "NOT_CONFIDENTIAL",
+    "identifier_type": "NO_MASK",
+    "entity_id": "001-60605_a3_e23"
+}
+
+{
+    "entity_type": "MISC",
+    "entity_mention_id": "001-60605_a3_em58",
+    "start_offset": 3941,
+    "end_offset": 3948,
+    "span_text": "heroine",
+    "edit_type": "insert",
+    "confidential_status": "NOT_CONFIDENTIAL",
+    "identifier_type": "QUASI",
+    "entity_id": "001-60605_a3_e41"
+}
+
+{
+    "entity_type": "ORG",
+    "entity_mention_id": "001-60605_a3_em65",
+    "start_offset": 4656,
+    "end_offset": 4677,
+    "span_text": "Amnesty International",
+    "edit_type": "check",
+    "confidential_status": "NOT_CONFIDENTIAL",
+    "identifier_type": "NO_MASK",
+    "entity_id": "001-60605_a3_e47"
+}
+
+{
+    "entity_type": "ORG",
+    "entity_mention_id": "001-60605_a3_em74",
+    "start_offset": 5635,
+    "end_offset": 5684,
+    "span_text": "the immigration authorities (Udl\u00e6ndingestyrelsen)",
+    "edit_type": "insert",
+    "confidential_status": "NOT_CONFIDENTIAL",
+    "identifier_type": "NO_MASK",
+    "entity_id": "001-60605_a3_e53"
+}
+
+{
+    "entity_type": "ORG",
+    "entity_mention_id": "001-60605_a3_em81",
+    "start_offset": 6194,
+    "end_offset": 6226,
+    "span_text": "Refugee Board (Flygtningen\u00e6vnet)",
+    "edit_type": "insert",
+    "confidential_status": "NOT_CONFIDENTIAL",
+    "identifier_type": "NO_MASK",
+    "entity_id": "001-60605_a3_e56"
+}
+
+{
+    "entity_type": "ORG",
+    "entity_mention_id": "001-60605_a3_em95",
+    "start_offset": 7474,
+    "end_offset": 7520,
+    "span_text": "Leave to Appeal Board (Procesbevillingsn\u00e6vnet)",
+    "edit_type": "insert",
+    "confidential_status": "NOT_CONFIDENTIAL",
+    "identifier_type": "NO_MASK",
+    "entity_id": "001-60605_a3_e62"
+}
+
+{
+    "entity_type": "ORG",
+    "entity_mention_id": "001-60605_a3_em99",
+    "start_offset": 7622,
+    "end_offset": 7635,
+    "span_text": "Supreme Court",
+    "edit_type": "check",
+    "confidential_status": "NOT_CONFIDENTIAL",
+    "identifier_type": "NO_MASK",
+    "entity_id": "001-60605_a3_e66"
+}
+
+{
+    "entity_type": "ORG",
+    "entity_mention_id": "001-60605_a3_em100",
+    "start_offset": 7647,
+    "end_offset": 7659,
+    "span_text": "High Court's",
+    "edit_type": "check",
+    "confidential_status": "NOT_CONFIDENTIAL",
+    "identifier_type": "NO_MASK",
+    "entity_id": "001-60605_a3_e67"
+}
+```
+
+# Sachen die nicht richtig aufgefasst wurden:
+
+6c5af49c-abbf-4b: “drug trafficking with regard to at least 450 grams of heroine contrary to Article 191 of the Criminal Code” at 3887-3993

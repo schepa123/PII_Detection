@@ -13,7 +13,7 @@ from src.module import neo4j_conn
 from src.module import llm_agents
 from src.module import utils
 from src.module import llm_agents_static
-
+from src.module.utils import extract_pii_dynamic as _sync_extract_pii_dynamic
 
 def set_up_argparse():
     """Set up the argument parser."""
@@ -156,7 +156,7 @@ def extract_pii_static(
     )
 
 
-def extract_pii_dynamic(
+async def extract_pii_dynamic(
     text: str,
     base_url: str,
     model_name_prompt_creater: str,
@@ -192,35 +192,45 @@ def extract_pii_dynamic(
     -------
     None
     """
+    # 1) Build local paths
+    (
+        prompt_handcrafted_folder,
+        prompt_folder_to_save,
+        property_yml_file_path,
+        prompt_config_yml_path,
+        guidelines_path_extracting,
+        guidelines_path_issue,
+    ) = create_paths()
 
-    (prompt_handcrafted_folder, prompt_folder_to_save, property_yml_file_path,
-     prompt_config_yml_path, guidelines_path_extracting,
-     guidelines_path_issue) = create_paths()
-
+    # 2) Load PII definitions
     property_dict = utils.read_yaml(property_yml_file_path)
 
+    # 3) Create thread tasks for each PII type
+    tasks = []
     for pii_name in property_dict.keys():
-        #if pii_name != "real_estate":
-        #    continue
-        print(f"Extracting {pii_name} from text")
-        logger.info(f"Extracting {pii_name} from text")
-        utils.extract_pii_dynamic(
-            pii_name=pii_name,
-            category="independent",
-            text=text,
-            drop_category=True,
-            prompt_handcrafted_folder=prompt_handcrafted_folder,
-            prompt_folder_to_save=prompt_folder_to_save,
-            model_name_prompt_creater=model_name_prompt_creater,
-            model_name_meta_expert=model_name_meta_expert,
-            api_key_prompt_creater=api_key_prompt_creater,
-            api_key_meta_expert=api_key_meta_expert,
-            property_yml_file_path=property_yml_file_path,
-            prompt_config_yml_path=prompt_config_yml_path,
-            guidelines_path_extracting=guidelines_path_extracting,
-            guidelines_path_issue=guidelines_path_issue,
-            conn=conn,
-            refine_prompts=False,
-            temperature=temperature,
-            base_url=base_url,
+        tasks.append(
+            asyncio.to_thread(
+                _sync_extract_pii_dynamic,
+                pii_name=pii_name,
+                category="independent",
+                text=text,
+                drop_category=True,
+                prompt_handcrafted_folder=prompt_handcrafted_folder,
+                prompt_folder_to_save=prompt_folder_to_save,
+                model_name_prompt_creater=model_name_prompt_creater,
+                model_name_meta_expert=model_name_meta_expert,
+                api_key_prompt_creater=api_key_prompt_creater,
+                api_key_meta_expert=api_key_meta_expert,
+                property_yml_file_path=property_yml_file_path,
+                prompt_config_yml_path=prompt_config_yml_path,
+                guidelines_path_extracting=guidelines_path_extracting,
+                guidelines_path_issue=guidelines_path_issue,
+                conn=conn,
+                refine_prompts=False,
+                temperature=temperature,
+                base_url=base_url,
+            )
         )
+
+    # 4) Run all extractions in parallel
+    await asyncio.gather(*tasks)

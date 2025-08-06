@@ -369,8 +369,8 @@ def extract_pii_dynamic(
     temperature: float = 0.5,
 ) -> None:
     """
-    Extracts PIIs from the text and creates nodes in the database by starting the
-    conversation loop. This function handles dynamically generated prompts.
+    Extracts PIIs from the text and creates nodes in the database by starting
+    the conversation loop. This function handles dynamically generated prompts.
 
     Parameters
     ----------
@@ -434,6 +434,7 @@ def extract_pii_dynamic(
         prompt_folder=prompt_handcrafted_folder,
         model_name=model_name_meta_expert,
         api_key=api_key_meta_expert,
+        base_url=base_url,
         category=category,
         conn=conn,
         yml_file=property_yml_file_path,
