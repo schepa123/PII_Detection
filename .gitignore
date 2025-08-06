@@ -8,3 +8,4 @@ src/cli/__pycache__/*
 .env
 Data/Other/*
 src/module/__pycache__/*
+Data/texts/*
