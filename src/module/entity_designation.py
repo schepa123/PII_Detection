@@ -786,4 +786,3 @@ class Entity_designation(LLMAgent):
             prompt_subfolder=prompt_subfolder,
             prompt_name=prompt_name
         )
-    # TODO: ADD function to load health information into database

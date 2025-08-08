@@ -291,7 +291,7 @@ class PromptCreater(LLMAgent):
         str
             The prompt with examples
         """
-        if type_prompt != "issue":
+        if type_prompt != "issueTODO":
             developer_prompt = self.return_prompt(type_prompt, example=True)
 
             example_list = utils.get_property_information(
@@ -328,6 +328,8 @@ class PromptCreater(LLMAgent):
         else:
             # TODO: Schau, dass du es irgendwie hinbekommst, dass die
             # Beispiele erstellt werden vom LLM, statt sie zu hardcoden
+
+            # Habe ich mal probiert, schau ob es wirklich klappt
             examples = self.return_prompt(type_prompt, example=True)
             final_prompt = textwrap.dedent(f"""
             {generated_prompt}
@@ -1380,8 +1382,6 @@ class MetaPrompterIndividuals(MetaPrompter):
         solutions_list = self.prepare_solution_for_verification(solutions)
         person_dict = json.loads(self.read_persons())
         tasks = []
-        # TODO: Hier kannst du schauen, dass das person_dict nur auf die
-        # Personen beschränkt ist, die in der Lösung vorkommt
         async with asyncio.TaskGroup() as tg:
             for solution in solutions_list:
                 user_prompt = f"""
@@ -1518,7 +1518,6 @@ class MetaPrompterIndividuals(MetaPrompter):
             verification_results=verification_results
         )
         solutions_list = self.prepare_solution_for_verification(old_response)
-        # TODO: Was wenn mehr als eine further solution. DAS MUSST DU LÖSEN!!!
         solutions_list.extend(further_solutions)
         correct_solutions_list = [
             {key_name: solution[key_name]}

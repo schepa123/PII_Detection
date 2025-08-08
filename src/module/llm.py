@@ -11,7 +11,6 @@ from loguru import logger
 
 
 class LLMAgent:
-    # TODO: Hier base_url argument hinzufügen
     """
     Basic class for the LLM Agent
 
@@ -215,7 +214,6 @@ class LLMAgent:
         dict
             The extracted JSON.
         """
-        # TODO: Da steht zwei mal das gleiche, eines löschen
         try:
             return json.loads(
                 re.search(r"```json\s([\s\S]*?)```", response).group(1)

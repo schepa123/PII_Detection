@@ -7,6 +7,7 @@ from loguru import logger
 import asyncio
 import nest_asyncio
 import cli_helper
+import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from src.module.llm import LLMAgent
@@ -15,7 +16,7 @@ from src.module import neo4j_conn
 from src.module import llm_agents
 from src.module import utils
 from src.module import llm_agents_static
-
+from src.evaluate import prepare_evaluation
 nest_asyncio.apply()
 
 
@@ -53,35 +54,90 @@ async def main():
     MODEL_PROMPT_CREATER = os.getenv("MODEL_PROMPT_CREATER")
     BASE_URL = os.getenv("BASE_URL")
     TEMPERATURE = float(os.getenv("TEMPERATURE"))
-    text = cli_helper.read_text_file(args.text_path)
 
-    print("Start dynamic PIIs")
-    await cli_helper.extract_pii_dynamic(
-        text=text,
-        base_url=BASE_URL,
-        model_name_prompt_creater=MODEL_PROMPT_CREATER,
-        model_name_meta_expert=MODEL_DYNAMIC,
-        api_key_prompt_creater=API_KEY,
-        api_key_meta_expert=API_KEY,
-        conn=conn,
-        temperature=TEMPERATURE,
+    texts_path = os.path.join(root_dir, "Data", "texts")
+    output_path = os.path.join(
+        root_dir,
+        "Output"
     )
-    print("Finished dynamic PIIs")
+    files = [
+        f for f in os.listdir(texts_path)
+        if os.path.isfile(os.path.join(texts_path, f))
+    ]
 
-    print("Start static PIIs")
-    cli_helper.extract_pii_static(
-        text=text,
-        api_key=API_KEY,
-        base_url=BASE_URL,
-        model_name=MODEL_STATIC,
-        temperature=TEMPERATURE,
-        conn=conn,
-    )
-    print("Finished static PIIs")
+    # For loop über alle Dokumente in /Data/texts/
+    for file in files:
+        #TODO: Füge 
+        text = cli_helper.read_text_file(os.path.join(
+            texts_path,
+            file
+        ))
+        doc_id = file.split(".")[0]
 
-    conn.save_nodes_as_json(
-        path=args.result_path,
-    )
+        print("Start dynamic PIIs")
+        await cli_helper.extract_pii_dynamic(
+            text=text,
+            base_url=BASE_URL,
+            model_name_prompt_creater=MODEL_PROMPT_CREATER,
+            model_name_meta_expert=MODEL_DYNAMIC,
+            api_key_prompt_creater=API_KEY,
+            api_key_meta_expert=API_KEY,
+            conn=conn,
+            temperature=TEMPERATURE,
+        )
+        print("Finished dynamic PIIs")
+
+        print("Start static PIIs")
+        cli_helper.extract_pii_static(
+            text=text,
+            api_key=API_KEY,
+            base_url=BASE_URL,
+            model_name=MODEL_STATIC,
+            temperature=TEMPERATURE,
+            conn=conn,
+        )
+        print("Finished static PIIs")
+
+        result_path = os.path.join(
+            output_path, f"{doc_id}.json"
+        )
+
+        conn.save_nodes_as_json(
+            path=result_path
+        )
+        position_dict = prepare_evaluation.locate_identifiers(
+            json.loads(result_path),
+            original_text=text,
+            doc_id=doc_id
+        )
+
+        with open(os.path.join(
+            output_path, f"{doc_id}_positions.json"
+        ), "w") as f:
+            json.dump(
+                position_dict, f
+            )
+
+    position_files = [
+        f for f in os.listdir(output_path)
+        if os.path.isfile(os.path.join(output_path, f))
+    ]
+
+    position_dict_list = []
+    for file in position_files:
+        position = file.split(".")[-1].split("_")[-1]
+        if position != "_positions":
+            continue
+        with open(os.path.join(output_path, file), "r") as f:
+            position_dict_list.append(
+                json.load(f)
+            )
+
+    with open(os.path.join(output_path, "final.json"), "w") as f:
+        json.dump(
+            prepare_evaluation.combine(position_dict_list), f
+        )
+
 
 
 

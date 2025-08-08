@@ -474,8 +474,6 @@ class MetaExpertConversation():
         # and we should return an empty dict
         if not self.verify_solutions:
             return {}
-        # TODO: Checken ob das wirklich stimmt!
-        # Alt: json.loads(self.verify_solutions[-1])
         return self.proposed_solutions[-1]
 
     def take_next_step(
