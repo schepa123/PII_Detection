@@ -85,29 +85,35 @@ class Neo4jConnection:
         None
         """
         pii = pii.title()
-        node_dict = {
-            pii: [
-                {
-                    "identifier": value["identifier"].lower(),
-                    "context": value["context"],
-                    "uuid": key
-                }
-                for result_dict in result
-                for key, value in result_dict.items()
-            ]
-        }
-        query = f"""
-            UNWIND $piis AS pii
-            MERGE (p:{pii} {{uuid: pii.uuid}})
-            ON CREATE SET p.uuid = pii.uuid
-            SET p.identifier = pii.identifier
-            SET p.context = pii.context
-        """
+        try:
+            node_dict = {
+                pii: [
+                    {
+                        "identifier": value["identifier"].lower(),
+                        "context": value["context"],
+                        "uuid": key
+                    }
+                    for result_dict in result
+                    for key, value in result_dict.items()
+                ]
+            }
+            query = f"""
+                UNWIND $piis AS pii
+                MERGE (p:{pii} {{uuid: pii.uuid}})
+                ON CREATE SET p.uuid = pii.uuid
+                SET p.identifier = pii.identifier
+                SET p.context = pii.context
+            """
 
-        self.query(
-            query,
-            parameters={'piis': node_dict[pii]}
-        )
+            self.query(
+                query,
+                parameters={'piis': node_dict[pii]}
+            )
+        except AttributeError as e:
+            print(e)
+            print(pii)
+            print(result)
+            raise AttributeError("Something went wrong.")
 
     def create_nodes_pii(
         self,

@@ -31,27 +31,38 @@ def locate_identifiers(
     results = []
     position_list = []
     for rec in pii_json:
-        context = rec["context"]
-        identifier = rec["identifier"]
+        try:
+            context = rec["context"]
+            identifier = rec["identifier"]
 
-        context_re = re.compile(re.escape(context))
-        context_m = context_re.search(original_text)
-        if not context_m:
-            print(f"Context not found for uuid {rec['uuid']!r}")
-            continue
+            context_re = re.compile(re.escape(context))
+            context_m = context_re.search(original_text)
+            if not context_m:
+                print(f"Context not found for uuid {rec['uuid']!r}")
+                continue
 
-        context_start, context_end = context_m.span()
+            context_start, context_end = context_m.span()
 
-        id_re = re.compile(re.escape(identifier), flags=re.IGNORECASE)
-        for m in id_re.finditer(original_text[context_start:context_end]):
-            abs_start = context_start + m.start()
-            abs_end = context_start + m.end()
-            results.append({
-                "uuid": rec["uuid"],
-                "found": m.group(),
-                "start": abs_start,
-                "end": abs_end
-            })
+            id_re = re.compile(re.escape(identifier), flags=re.IGNORECASE)
+            for m in id_re.finditer(original_text[context_start:context_end]):
+                abs_start = context_start + m.start()
+                abs_end = context_start + m.end()
+                results.append({
+                    "uuid": rec["uuid"],
+                    "found": m.group(),
+                    "start": abs_start,
+                    "end": abs_end
+                })
+        except KeyError:
+            if "full_name" in rec:
+                name_re = re.compile(re.escape(rec["full_name"]), flags=re.IGNORECASE)
+                for m in name_re.finditer(original_text):
+                    results.append({
+                        "uuid": rec.get("uuid"),
+                        "found": m.group(),
+                        "start": m.start(),
+                        "end": m.end()
+                    })
 
     for result in results:
         position_list.append([result["start"], result["end"]])

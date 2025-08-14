@@ -1117,6 +1117,7 @@ class MetaPrompterIndependent(MetaPrompter):
         wrong_solutions = {}
         correct_solutions = {}
         temp_dict = json.loads(verify_results)
+        print(verify_results)
         for key, value in temp_dict.items():
             if value["bool"]:
                 correct_solutions[key] = value
@@ -1421,6 +1422,7 @@ class MetaPrompterIndividuals(MetaPrompter):
         tuple[list[str], dict[str, dict[str, str]]]
             The corrected identifiers and the incorrect dictionary
         """
+        print(verification_results)
         solution_dict = self.prepare_solution_for_verification(solutions)
         solution_temp_dict = {
             inner["uuid_of_solution"]: {
@@ -1513,6 +1515,7 @@ class MetaPrompterIndividuals(MetaPrompter):
         further_solutions = self.prepare_solution_for_verification(
             json.dumps(further_solutions)
         )
+        print()
         correct_solutions, _ = self.categorize_solutions(
             solutions=old_response,
             verification_results=verification_results
@@ -1837,7 +1840,7 @@ class MetaExpertConversation():
         None
         """
         next_step = self.step_queue[-1]["Next"]
-        print(f"Taking action: {next_step}")
+        print(f"Taking action for {self.pii_name}: {next_step}")
         match next_step:
             case "extracting":
                 self.run_prompt(type="extracting")
@@ -1907,11 +1910,21 @@ class MetaExpertConversation():
 
         previous_step = self.step_queue[-1]["Next"]
 
+        logger.info(f"""Prior conversation until adding step to conv:
+            {self.conversation_list[-1]["content"]}"""
+        )
         prompt = self.next_instruction_meta_prompt
-        prompt = prompt \
-            .replace("{{expert}}", expert) \
-            .replace("{{previous_step}}", previous_step) \
-            .replace("{{response}}", response)
+        try:
+            prompt = prompt \
+                .replace("{{expert}}", expert) \
+                .replace("{{previous_step}}", previous_step) \
+                .replace("{{response}}", response)
+        except TypeError as e:
+            print(e)
+            prompt = prompt \
+                .replace("{{expert}}", "None") \
+                .replace("{{previous_step}}", previous_step) \
+                .replace("{{response}}", response)
 
         self.add_to_conversation_list(
             role="user", content=prompt
@@ -2102,6 +2115,33 @@ class MetaExpertConversation():
             type="issue"
         )
 
+    def retry_verify(self, pii_dict):
+        """
+        123
+        """
+        results = asyncio.run(self.agent.send_solutions_for_verification(
+            text=self.text,
+            verification_prompt=self.generated_prompts["verifying"][-1],
+            solutions=self.proposed_solutions[-1],
+            pii_name=self.pii_name,
+            pii_description=pii_dict[self.pii_name]["description"]
+        ))
+        logger.info(f"Verification response'{results}'")
+        temp_result = self.process_verification_results(
+            verification_results=results,
+            unverified_solutions=json.loads(self.proposed_solutions[-1])
+        )
+        for key, value in json.loads(temp_result).items():
+            try:
+                value["bool"]
+            except KeyError:
+                print(f"Retrying Verify for: {self.pii_name}")
+                print(temp_result)
+                print(value)
+                self.retry_verify(pii_dict=pii_dict)
+
+        return temp_result
+
     def verify_solution(
         self
     ):
@@ -2129,20 +2169,9 @@ class MetaExpertConversation():
             yml=self.agent.yml,
             pii_name=self.pii_name
         )
-        results = asyncio.run(self.agent.send_solutions_for_verification(
-            text=self.text,
-            verification_prompt=self.generated_prompts["verifying"][-1],
-            solutions=self.proposed_solutions[-1],
-            pii_name=self.pii_name,
-            pii_description=pii_dict[self.pii_name]["description"]
-        ))
-        logger.info(f"Verification response'{results}'")
-        self.verify_solutions.append(
-            self.process_verification_results(
-                verification_results=results,
-                unverified_solutions=json.loads(self.proposed_solutions[-1])
-            )
-        )
+        result = self.retry_verify(pii_dict=pii_dict)
+        self.verify_solutions.append(result)
+
         self.add_next_step_meta_to_conversation(
             response=self.verify_solutions[-1],
             issue_handling=False
@@ -2168,7 +2197,7 @@ class MetaExpertConversation():
                 prompt=self.generated_prompts["issue"][-1],
                 type="issue"
             )
-
+        print(self.pii_name)
         correct_solutions, wrong_solutions = self.agent.categorize_solutions(
             self.verify_solutions[-1]
         )

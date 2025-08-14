@@ -39,7 +39,8 @@ You must always format your response in markdown, never in JSON, XML etc. Use th
 
 - The `reasoning` should explain why the identifier for the PII was extracted based on its relevance in the text. The reasoning should be two sentences long.
 - The `context` should be the surrounding text of the identifier, copied verbatim from the text
-- The `identifier` should be the PII, copied from the text
+- The `identifier` should be the PII. `identifier` must be a non-empty string and a verbatim substring of context.
+
 
 ## Prohibited actions
 - Never generate examples for your prompts.
@@ -47,3 +48,4 @@ You must always format your response in markdown, never in JSON, XML etc. Use th
 - Never use another format then markdown for your answer 
 - Never forget to write the format requirements as described in `Answer Structure` in the prompt
 - Never mention yourself in the generated prompt, stay neutral. Therefore text like "- **Task**: I will assign the role of machine learning expert to the LLM"is prohibited in the prompt. Just don't mention yourself.
+- Never forget to mention that the output must **never** have `None` for any key, this is strictly forbidden!

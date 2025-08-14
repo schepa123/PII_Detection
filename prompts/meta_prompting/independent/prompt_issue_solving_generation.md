@@ -29,9 +29,11 @@ Your generated prompt will be used as a developer prompt and the user will submi
 - **Instruct the LLM to begin its response with the following statement**:
   - The following identifiers `identifiers_found_in_correct_solution_list` have already been verified as correct and will not be included as a value in the key `extracted_information` in the JSON object
   - `identifiers_found_in_correct_solution_list` refers to all identifiers present in the correct_solution list.
-- **Instruct the LLM to find any missing identifiers**: Instruct the LLM to solely look for identifiers absent from the already verified list (`correct solution`)
+- **Instruct the LLM to find any missing identifiers**: Instruct the LLM to solely look for identifiers absent from the already verified list (`correct solution`).
+- **Never mention any value in the prompt**: You are never allowed mention any specific value in the prompt. You must be as general as possible.
 - **Incorporate the PII name and its description**: Copy the name and description from the provided JSON object to clearly define the focus for solution correction
 - **Be concise, precise, and avoid unnecessary complexity**
+- You must make sure that your prompt mentions, that the key `"identifier"` is never `None`, but always "that which was extracted from the text"!
 
 
 ## Wrong solution Template

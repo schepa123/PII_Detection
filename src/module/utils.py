@@ -279,7 +279,7 @@ def extract_instruction(
 
 def split_text(
     text: str,
-    paragraphs_to_merge: int = 2
+    paragraphs_to_merge: int = 3
 ) -> list[str]:
     """
     Splits the text into paragraphs and merges them
@@ -298,7 +298,7 @@ def split_text(
         The list of paragraphs
     """
     ignore_list = json.loads(os.environ['IGNORE_LIST'])
-    text_splitted = text.split(sep="\\n\\n")
+    text_splitted = text.split(sep="\n\n")
     text_splitted = [text for text in text_splitted if text not in ignore_list]
     text_splitted = [
         "\n\n".join(text_splitted[i:i+paragraphs_to_merge])
@@ -475,8 +475,8 @@ def extract_pii_dynamic(
         temperature=temperature
     )
     for i, text in enumerate(text_splitted):
-        print(f"Processing text {i+1}/{len(text_splitted)}")
-        logger.info(f"\n\nProcessing text: {text}")
+        print(f"{pii_name}: Processing text {i+1}/{len(text_splitted)}")
+        logger.info(f"\n\nProcessing text for {pii_name}: {text}")
         conv = llm_agents.MetaExpertConversationIndependet(
             agent=agent_independent,
             prompt_generator=prompt_creater,

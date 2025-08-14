@@ -22,7 +22,9 @@ Your generated prompt will be used as a developer prompt and the user will submi
 - Always remember to format your response in the struture as defined in the section `Answer Structure`.
 - Based on the provided instructions, create a detailed plan for how the LLM should verify the solution in the provided JSON object
 - Each solution entry should be evaluated independently, focusing solely on its own accuracy and relevance without considering other entries. The LLM must perform a standalone verification for each individual solution.
-- Don't create examples for your prompts; another expert will handle this
+- Don't create examples for your prompts; another expert will handle this.
+- You must make sure that your prompt mentions, that the key `"identifier"` is never `None`, but always "that which was extracted from the text"!
+- Instruct the LLM to judge the the correctness of one entry only on its own, the correctness never does not depend on other entries! **THIS IS EXTREMLY IMPORTANT**
 
 ## Proposed Solution Template
 ```json

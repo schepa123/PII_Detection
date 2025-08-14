@@ -7,7 +7,6 @@ from loguru import logger
 import asyncio
 import nest_asyncio
 import cli_helper
-import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from src.module.llm import LLMAgent
@@ -22,6 +21,8 @@ nest_asyncio.apply()
 
 async def main():
     """Main function to set up the argument parser and process the file."""
+    # TODO: EINBAUEN, dass nach jedem Durchgang die Prompts gelöscht werden
+    
     cwd = os.path.realpath(os.path.join(
         os.getcwd(), os.path.dirname(__file__)
     ))
@@ -48,6 +49,7 @@ async def main():
         user="neo4j",
         pwd="neo4jneo4j"
     )
+    conn.query(query="""MATCH (n) DETACH DELETE n""")
     API_KEY = os.getenv("API_KEY")
     MODEL_STATIC = os.getenv("MODEL_STATIC")
     MODEL_DYNAMIC = os.getenv("MODEL_DYNAMIC")
@@ -67,7 +69,6 @@ async def main():
 
     # For loop über alle Dokumente in /Data/texts/
     for file in files:
-        #TODO: Füge 
         text = cli_helper.read_text_file(os.path.join(
             texts_path,
             file
@@ -105,11 +106,16 @@ async def main():
         conn.save_nodes_as_json(
             path=result_path
         )
+
+        with open(result_path, "r") as f:
+            nodes_json = json.load(f)
+
         position_dict = prepare_evaluation.locate_identifiers(
-            json.loads(result_path),
+            nodes_json,
             original_text=text,
             doc_id=doc_id
         )
+        print(position_dict)
 
         with open(os.path.join(
             output_path, f"{doc_id}_positions.json"
@@ -118,6 +124,8 @@ async def main():
                 position_dict, f
             )
 
+        logger.info(f"Finished {file}")
+
     position_files = [
         f for f in os.listdir(output_path)
         if os.path.isfile(os.path.join(output_path, f))
@@ -125,8 +133,7 @@ async def main():
 
     position_dict_list = []
     for file in position_files:
-        position = file.split(".")[-1].split("_")[-1]
-        if position != "_positions":
+        if not file.endswith("_positions.json"):
             continue
         with open(os.path.join(output_path, file), "r") as f:
             position_dict_list.append(
