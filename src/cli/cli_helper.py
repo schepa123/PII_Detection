@@ -28,7 +28,7 @@ def set_up_argparse():
     return parser
 
 
-def create_paths() -> tuple[str, str, str, str, str, str]:
+def create_paths() -> tuple[str, str, str, str, str, str, str]:
     """
     Create paths for various files and folders used in the project.
 
@@ -67,11 +67,15 @@ def create_paths() -> tuple[str, str, str, str, str, str]:
     ))
     guidelines_path_extracting = os.path.abspath(os.path.join(
         file_path,
-        "../../prompts/meta_prompting/individuals/guidelines_for_extracting.md"
+        "../../prompts/meta_prompting/independent/guidelines_for_extracting.md"
     ))
     guidelines_path_issue = os.path.abspath(os.path.join(
         file_path,
-        "../../prompts/meta_prompting/individuals/guidelines_for_issue_solving.md"
+        "../../prompts/meta_prompting/independent/guidelines_for_issue_solving.md"
+    ))
+    guidelines_path_verify = os.path.abspath(os.path.join(
+        file_path,
+        "../../prompts/meta_prompting/independent/guidelines_for_issue_solving.md"
     ))
 
     return (
@@ -80,7 +84,8 @@ def create_paths() -> tuple[str, str, str, str, str, str]:
         property_yml_file_path,
         prompt_config_yml_path,
         guidelines_path_extracting,
-        guidelines_path_issue
+        guidelines_path_issue,
+        guidelines_path_verify
     )
 
 
@@ -165,6 +170,7 @@ async def extract_pii_dynamic(
     api_key_meta_expert: str,
     conn: neo4j_conn.Neo4jConnection,
     temperature: float,
+    refine_prompts: bool
 ) -> None:
     """
     Extract PII using dynamic methods.
@@ -200,6 +206,7 @@ async def extract_pii_dynamic(
         prompt_config_yml_path,
         guidelines_path_extracting,
         guidelines_path_issue,
+        guidelines_path_verify
     ) = create_paths()
 
     # 2) Load PII definitions
@@ -225,8 +232,9 @@ async def extract_pii_dynamic(
                 prompt_config_yml_path=prompt_config_yml_path,
                 guidelines_path_extracting=guidelines_path_extracting,
                 guidelines_path_issue=guidelines_path_issue,
+                guidelines_path_verify=guidelines_path_verify,
                 conn=conn,
-                refine_prompts=False,
+                refine_prompts=refine_prompts,
                 temperature=temperature,
                 base_url=base_url,
             )

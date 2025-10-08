@@ -1520,6 +1520,7 @@ class MetaPrompterIndividuals(MetaPrompter):
             solutions=old_response,
             verification_results=verification_results
         )
+        print(correct_solutions)
         solutions_list = self.prepare_solution_for_verification(old_response)
         solutions_list.extend(further_solutions)
         correct_solutions_list = [
@@ -1589,6 +1590,7 @@ class MetaExpertConversation():
         pii_name: str,
         guidelines_path_extracting: str,
         guidelines_path_issue: str,
+        guidelines_path_verify: str,
         refine_prompts: bool = False
     ):
         self.agent = agent
@@ -1598,10 +1600,12 @@ class MetaExpertConversation():
         self.pii_name = pii_name
         self.guidelines_path_extracting = guidelines_path_extracting
         self.guidelines_path_issue = guidelines_path_issue
+        self.guidelines_path_verify = guidelines_path_verify
         self.refine_prompts = refine_prompts
         self.prompt_generator = prompt_generator
         self.proposed_solutions = []
         self.verify_solutions = []
+        self.verification_attempt = 0
 
         prompts = agent.prompts["meta_prompting"]["general"]
         self.meta_expert_prompt = agent.meta_expert_prompt
@@ -1636,6 +1640,7 @@ class MetaExpertConversation():
                 self.generate_new_prompt = True
                 # TODO: Das wieder richtig stellen
                 # self.refine_prompts = True
+            print(f"{pii_name}: {self.to_generate}")
 
     def select_prompt_from_config(
         self,
@@ -1733,10 +1738,6 @@ class MetaExpertConversation():
         -------
         None
         """
-        # TODO: Vielleicht solltest du das anders machen und jedes Mal den
-        # Prompt neu speichern, wenn du den Prompt neu generierst und den
-        # Alten dann backupacken
-
         self.prompt_generator.save_prompt_to_file(
             prompt=prompt,
             pii_name=self.pii_name,
@@ -1763,7 +1764,6 @@ class MetaExpertConversation():
             self.prompt_generator.category,
             self.pii_name
         )
-
         prompt_types = ["extracting", "issue", "verifying"]
 
         for prompt_type in prompt_types:
@@ -1845,7 +1845,12 @@ class MetaExpertConversation():
             case "extracting":
                 self.run_prompt(type="extracting")
             case "verification":
-                self.verify_solution()
+                if self.verification_attempt >= 5:
+                    print(f"Too many failed attempts for {self.pii_name}")
+                    self.verification_attempt = 0
+                    return self.end_conversation()
+                else:
+                    self.verify_solution()
             case "issues_solving":
                 self.solve_issues()
             case "end":
@@ -1919,12 +1924,17 @@ class MetaExpertConversation():
                 .replace("{{expert}}", expert) \
                 .replace("{{previous_step}}", previous_step) \
                 .replace("{{response}}", response)
-        except TypeError as e:
+        except Exception as e:
+            print("---")
+            print(self.pii_name)
+            print(previous_step)
+            print(response)
             print(e)
+            print("----")
             prompt = prompt \
                 .replace("{{expert}}", "None") \
                 .replace("{{previous_step}}", previous_step) \
-                .replace("{{response}}", response)
+                .replace("{{response}}", previous_step)
 
         self.add_to_conversation_list(
             role="user", content=prompt
@@ -1946,9 +1956,13 @@ class MetaExpertConversation():
         previous_step = self.step_queue[-1]["Next"]
         # Das auf next_instructions änder
         prompt = self.next_step_meta_prompt
-        prompt = prompt \
-            .replace("{{previous_step}}", previous_step) \
-            .replace("{{response}}", response)
+        try:
+            prompt = prompt \
+                .replace("{{previous_step}}", previous_step) \
+                .replace("{{response}}", response)
+        except Exception as e:
+            print(f"Exception: {e}")
+            print(f"{self.pii_name} (Error match): {text}")
 
         return prompt
 
@@ -2065,14 +2079,16 @@ class MetaExpertConversation():
         -------
         None
         """
+        print(f"{self.pii_name}: Create verifying prompt")
         instruction_json = json.loads(self.conversation_list[-1]["content"])
         final_prompt = self.prompt_generator.create_prompt_with_examples(
             instructions=instruction_json,
             pii_name=self.pii_name,
+            guidelines_path=self.guidelines_path_verify,
             type_prompt="verifying"
         )
         if self.refine_prompts:
-            final_prompt, responses_feedback = self.prompt_generator.\
+            final_prompt = self.prompt_generator.\
                 process_feedback_loop(
                     prompt=final_prompt
                 )
@@ -2082,6 +2098,8 @@ class MetaExpertConversation():
             prompt=final_prompt,
             type="verifying"
         )
+        if not self.generate_new_prompt:
+            self.to_generate["verifying"] = False
 
     def create_issue_prompt(
         self
@@ -2098,22 +2116,24 @@ class MetaExpertConversation():
         None
 
         """
+        print(f"{self.pii_name}: Creating issue prompt.")
         instruction_json = json.loads(self.conversation_list[-1]["content"])
         final_prompt = self.prompt_generator.create_prompt_with_examples(
             instructions=instruction_json,
             pii_name=self.pii_name,
+            guidelines_path=self.guidelines_path_issue,
             type_prompt="issue"
         )
         if self.refine_prompts:
-            final_prompt, responses_feedback = self.prompt_generator.\
-                process_feedback_loop(
-                    generated_prompt=final_prompt
-                )
+            final_prompt = self.prompt_generator.\
+                process_feedback_loop(final_prompt)
         self.generated_prompts["issue"].append(final_prompt)
         self.save_prompt_to_file(
             prompt=final_prompt,
             type="issue"
         )
+        if not self.generate_new_prompt:
+            self.to_generate["issue"] = False
 
     def retry_verify(self, pii_dict):
         """
@@ -2127,19 +2147,23 @@ class MetaExpertConversation():
             pii_description=pii_dict[self.pii_name]["description"]
         ))
         logger.info(f"Verification response'{results}'")
+        print(f"Verification response: '{results}'")
         temp_result = self.process_verification_results(
             verification_results=results,
             unverified_solutions=json.loads(self.proposed_solutions[-1])
         )
+
         for key, value in json.loads(temp_result).items():
             try:
                 value["bool"]
             except KeyError:
                 print(f"Retrying Verify for: {self.pii_name}")
-                print(temp_result)
+                print(parsed)
                 print(value)
-                self.retry_verify(pii_dict=pii_dict)
+                # IMPORTANT: propagate the retry result
+                return self.retry_verify(pii_dict=pii_dict)
 
+        # IMPORTANT: return the dict, not the original string
         return temp_result
 
     def verify_solution(
@@ -2170,12 +2194,19 @@ class MetaExpertConversation():
             pii_name=self.pii_name
         )
         result = self.retry_verify(pii_dict=pii_dict)
+        if result == {}:
+            print("result is {--}")
+            result = self.retry_verify(pii_dict=pii_dict)
         self.verify_solutions.append(result)
+
+        print(f"{self.pii_name}")
+        print(f"Result added to conv: \n {result}")
 
         self.add_next_step_meta_to_conversation(
             response=self.verify_solutions[-1],
             issue_handling=False
         )
+        self.verification_attempt += 1
 
     def solve_issues(self):
         """
@@ -2216,8 +2247,9 @@ class MetaExpertConversation():
         )
 
     def end_conversation(
-        self
-    ) -> dict:
+        self,
+        ended_because_limit: bool = False
+    ) -> list[dict]:
         """
         After the conversation is done, the final verification results
         are returned
@@ -2231,16 +2263,18 @@ class MetaExpertConversation():
         dict
             The final verification results
         """
-        if not self.verify_solutions:
-            return {}
-        # TODO: Checken ob das wirklich stimmt!
-        # Alt: json.loads(self.verify_solutions[-1])
-        last_proposed_solution = json.loads(self.proposed_solutions[-1])
-        if isinstance(last_proposed_solution, list):
-            return last_proposed_solution
-        return [
-            {key: value} for key, value in last_proposed_solution.items()
-        ]
+        if not ended_because_limit:
+            if not self.verify_solutions:
+                return [{}]
+
+            last_proposed_solution = json.loads(self.proposed_solutions[-1])
+            if isinstance(last_proposed_solution, list):
+                return last_proposed_solution
+            return [
+                {key: value} for key, value in last_proposed_solution.items()
+            ]
+        else:
+            return [{}]
 
     def process_verification_results(
         self,
@@ -2281,6 +2315,7 @@ class MetaExpertConversationIndependet(MetaExpertConversation):
         generate_new_prompt: bool,
         pii_name: str,
         guidelines_path_extracting: str,
+        guidelines_path_verify: str,
         guidelines_path_issue: str,
         refine_prompts: bool = False
     ):
@@ -2290,6 +2325,7 @@ class MetaExpertConversationIndependet(MetaExpertConversation):
             text=text,
             generated_prompt_folder=generated_prompt_folder,
             generate_new_prompt=generate_new_prompt,
+            guidelines_path_verify=guidelines_path_verify,
             pii_name=pii_name,
             guidelines_path_extracting=guidelines_path_extracting,
             guidelines_path_issue=guidelines_path_issue,
@@ -2299,49 +2335,70 @@ class MetaExpertConversationIndependet(MetaExpertConversation):
     def process_verification_results(
         self,
         verification_results: list[str],
-        unverified_solutions: dict[str, list[dict[str, str, str, str]]]
+        unverified_solutions: dict[str, list[dict[str, str]]] | list[dict[str, dict[str, str]]]
     ) -> str:
         """
-        Takes the verification results and adds info (person_uuid, reasoning
-        and identifier) to the solutions proposed
+        Merge verifier decisions (uuid -> {reasoning, bool}) back onto the original
+        extracted items, preserving identifier/context from extraction.
 
-        Parameters
-        ----------
-        verification_results : list[str]
-            The verification results
-        unverified_solutions : dict[str, list[dict[str, str, str, str]]]
-            The unverified solutions
-
-        Returns
-        -------
-        str
-            The verification results with the added info
+        Returns a JSON string:
+        {
+        "<uuid_of_solution>": {
+            "reasoning": "... (from verifier) ...",
+            "bool": true/false,
+            "identifier": "... (from extraction) ...",
+            "context": "... (from extraction) ..."
+        },
+        ...
+        }
         """
-        solutions_proposed = {}
-        if type(unverified_solutions) is not list:
-            unverified_solutions = [
-                {key: value} for key, value in unverified_solutions.items()
-            ]
-        for solution in unverified_solutions:
-            key = list(solution.keys())[0]
-            solutions_proposed[key] = {
-                "reasoning": solution[key]["reasoning"],
-                "identifier": solution[key]["identifier"],
-                "context": solution[key]["context"],
+        # 1) Normalize unverified solutions into {uuid: {identifier, context, reasoning}}
+        solutions_proposed: dict[str, dict[str, str]] = {}
+
+        # Accept both list[ {uuid: {...}} ] and dict[uuid] -> {...}
+        if isinstance(unverified_solutions, dict):
+            iterable = [{k: v} for k, v in unverified_solutions.items()]
+        else:
+            iterable = unverified_solutions
+
+        for item in iterable or []:
+            if not item:
+                continue
+            uuid_ = next(iter(item.keys()))
+            data = item[uuid_]
+            # Defensive: ensure required keys exist
+            solutions_proposed[uuid_] = {
+                "identifier": data.get("identifier", ""),
+                "context": data.get("context", ""),
+                "reasoning": data.get("reasoning", "")
             }
-        verification_solution_dict = {}
-        for verifaction_string in verification_results:
-            verification_solution_dict.update(
-                self.agent._extract_json_from_response(verifaction_string)
-            )
-        for key in verification_solution_dict.keys():
-            verification_solution_dict[key]["identifier"] = (
-                solutions_proposed[key]["identifier"]
-            )
-            verification_solution_dict[key]["context"] = (
-                solutions_proposed[key]["context"]
-            )
-        return json.dumps(verification_solution_dict)
+
+        # 2) Parse each verifier output and merge
+        merged: dict[str, dict[str, str | bool]] = {}
+
+        for res in verification_results or []:
+            try:
+                parsed = self.agent._extract_json_from_response(res)
+            except Exception:
+                # last-ditch: try simple fence strip + json
+                cleaned = re.sub(r"^```(?:json)?\s*", "", str(res).strip(), flags=re.IGNORECASE)
+                cleaned = re.sub(r"\s*```$", "", cleaned)
+                parsed = json.loads(cleaned)
+
+            # Expected: { "<uuid>": {"reasoning": "...", "bool": true/false} }
+            for uuid_, verdict in parsed.items():
+                if uuid_ not in solutions_proposed:
+                    logger.warning(f"Verifier returned unknown uuid {uuid_}; skipping merge for it.")
+                    continue
+                merged[uuid_] = {
+                    "reasoning": verdict.get("reasoning", ""),
+                    "bool": bool(verdict.get("bool", False)),
+                    "identifier": solutions_proposed[uuid_]["identifier"],
+                    "context": solutions_proposed[uuid_]["context"],
+                }
+
+        return json.dumps(merged)
+
 
 
 class MetaExpertConversationIndividual(MetaExpertConversation):

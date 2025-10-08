@@ -8,6 +8,71 @@ from src.module import utils
 
 # Mach das Programm auf ein Dokument, runne locate_identifiers und speichere das Ergebnis wo ab und am Ende combine alles.
 
+
+def _replace_characters(text: str) -> str:
+    """
+    Replaces instances of characters that the LLM doesn't use.
+
+    Args:
+        text (str): String to modify
+
+    Returns:
+        str: Modified string.
+    """
+    return (
+        text
+        .replace('“', '"')
+        .replace('”', '"')
+        .replace('’', "'")
+        .replace('\u00A0', ' ')        # NBSP -> space
+        .replace('\u00AD', '')         # soft hyphen
+    )
+
+
+def _build_flexible_context_regex(context: str) -> re.Pattern:
+    _BETWEEN = r'(?:[\s,.;:!?()"\'' + "’“”" + r'\-–—]*?)'  # non-greedy
+    ctx = _replace_characters(context)
+    # words = sequences of letters/digits/underscore + Unicode letters
+    tokens = re.findall(r'\w+', ctx, flags=re.UNICODE)
+    if not tokens:
+        # fallback to escaped literal if we somehow got no tokens
+        return re.compile(re.escape(ctx), flags=re.IGNORECASE)
+    pattern = r'\b' + _BETWEEN.join(map(re.escape, tokens)) + r'\b'
+    return re.compile(pattern, flags=re.IGNORECASE)
+
+
+def _build_verbatim_matcher(extracted: str) -> re.Pattern:
+    parts = []
+    for ch in extracted:
+        if ch in {"'", "’"}:
+            parts.append(r"(?:'|’)")
+        elif ch in {'"', '“', '”'}:
+            parts.append(r'(?:"|“|”)')
+        elif ch in {'-', '–', '—'}:
+            parts.append(r"(?:-|–|—)")
+        elif ch == "\u00A0" or ch.isspace():  # space, tab, newline, NBSP
+            parts.append(r"(?:\s|\u00A0)+")
+        else:
+            parts.append(re.escape(ch))
+    pattern = "".join(parts)
+    return re.compile(pattern, flags=re.IGNORECASE)
+
+
+def _remove_first_last_character(text: str) -> str:
+    """
+    Removes the first and last characters of a string. This is
+    done because the LLM sometimes makes mistakes in the first
+    and last character.
+
+    Args:
+        text (str): String to modify
+
+    Returns:
+        str: Modified string.
+    """
+    return text[:-1][1:]
+
+
 def locate_identifiers(
     pii_json: list[dict[str, str]],
     original_text: str,
@@ -17,57 +82,121 @@ def locate_identifiers(
     Takes the JSON object containing the PIIs and their context
     and returns a list of list containing the starting and end
     position of a PII.
-
-    Args:
-        pii_json (list[dict[str, str]]): List of dicts of identified
-        PIIs with identifier, context, uuid keys.
-        original_text (str): Text from where PII was identified.
-        doc_id (str): ID of Document.
-
-    Returns:
-        dict[str, list[list[inst]]]: List of list with start and end
-        position of PII.
     """
-    results = []
-    position_list = []
+    results: list[dict] = []
+    position_list: list[dict[str, list[int]]] = []
+
+    # Normalize source text (no '.' -> ','); also fix NBSP/soft hyphen
+    original_text = _replace_characters(original_text).\
+        replace("\u00A0", " ").\
+        replace("\u00AD", "")
+
     for rec in pii_json:
-        try:
-            context = rec["context"]
-            identifier = rec["identifier"]
+        if "abbreviations" in rec:
+            name_patterns: list[re.Pattern] = []
+            full_name = rec.get("full_name")
+            if full_name:
+                # Escape unless you intentionally expect regex
+                name_patterns.append(
+                    re.compile(re.escape(full_name), flags=re.IGNORECASE)
+                )
 
-            context_re = re.compile(re.escape(context))
-            context_m = context_re.search(original_text)
-            if not context_m:
-                print(f"Context not found for uuid {rec['uuid']!r}")
-                continue
+            for abbr in rec.get("abbreviations", []) or []:
+                if not abbr:
+                    continue
+                name_patterns.append(
+                    re.compile(re.escape(abbr), flags=re.IGNORECASE)
+                )
 
+            for alias in rec.get("aliases", []) or []:
+                if (
+                    not alias
+                    or alias.lower() in {"applicant", "the applicant"}
+                ):
+                    continue
+                name_patterns.append(
+                    re.compile(re.escape(alias), flags=re.IGNORECASE)
+                )
+
+            for pat in name_patterns:
+                for m in pat.finditer(original_text):
+                    results.append({
+                        "uuid": rec.get("uuid"),
+                        "found": m.group(0),
+                        "start": m.start(),
+                        "end": m.end()
+                    })
+            continue
+
+        identifier = (rec.get("identifier") or "").strip()
+        if not identifier:
+            continue
+
+        context = rec.get("context") or ""
+        context_re = _build_flexible_context_regex(context)
+        context_m = context_re.search(original_text)
+
+        if context_m:
             context_start, context_end = context_m.span()
-
-            id_re = re.compile(re.escape(identifier), flags=re.IGNORECASE)
+            ident_norm = _replace_characters(identifier)
+            id_re = re.compile(re.escape(ident_norm), flags=re.IGNORECASE)
             for m in id_re.finditer(original_text[context_start:context_end]):
                 abs_start = context_start + m.start()
                 abs_end = context_start + m.end()
                 results.append({
-                    "uuid": rec["uuid"],
+                    "uuid": rec.get("uuid"),
                     "found": m.group(),
                     "start": abs_start,
                     "end": abs_end
                 })
-        except KeyError:
-            if "full_name" in rec:
-                name_re = re.compile(re.escape(rec["full_name"]), flags=re.IGNORECASE)
-                for m in name_re.finditer(original_text):
-                    results.append({
-                        "uuid": rec.get("uuid"),
-                        "found": m.group(),
-                        "start": m.start(),
-                        "end": m.end()
-                    })
+        else:
+            ident_norm = _replace_characters(identifier)
+            id_re = re.compile(re.escape(ident_norm), flags=re.IGNORECASE)
+            any_hit = False
+            for m in id_re.finditer(original_text):
+                any_hit = True
+                results.append({
+                    "uuid": rec.get("uuid"),
+                    "found": m.group(),
+                    "start": m.start(),
+                    "end": m.end()
+                })
+            if not any_hit:
+                print(f"Context not found for uuid {rec.get('uuid')!r}")
 
-    for result in results:
-        position_list.append([result["start"], result["end"]])
+    for r in results:
+        position_list.append({r["uuid"]: [r["start"], r["end"]]})
 
     return {doc_id: position_list}
+
+
+
+def merge_overlapping_elements(
+    position_dict: dict[str, list[int]]
+) -> dict[str, list[int]]:
+    """
+    Merges overlapping position ranges if the left element of
+    one entry is smaller than the left element of another and
+    the right element is the same.
+
+    Args:
+
+    """
+    key = list(position_dict.keys())[0]
+    position_list = position_dict[key]
+    best_left_for_right = {}
+
+    for pair in position_list:
+        left, right = pair
+
+        if right in best_left_for_right:
+            if left < best_left_for_right[right]:
+                best_left_for_right[right] = left
+        else:
+            best_left_for_right[right] = left
+    merged = [[left, right] for right, left in best_left_for_right.items()]
+    merged.sort(key=lambda x: (x[1], x[0]))
+    return {key: merged}
 
 
 def combine(

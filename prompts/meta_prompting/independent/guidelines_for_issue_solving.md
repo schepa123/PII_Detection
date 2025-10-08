@@ -6,3 +6,5 @@
 - If an identifier is already listed in the `correct solution` (as described in the `User Input` section), exclude it from your output.
 - Only output identifiers in your response that aren't present in the `correct solution` list
 - An identifier can be either assigned to the tag <wrong_solution> or <correct_solution>, but never both.
+- Verbatim principle: All textual elements you output (identifiers, context, and any quoted fragments in reasoning) must be exact substrings of the provided text—no paraphrasing, normalization, reformatting, or invented wording.
+- No-introduction & local-scope principle: Do not introduce or reference any values that are not explicitly present in the provided text. Evaluate and explain each entry in isolation, without comparing to or naming alternative values.

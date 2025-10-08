@@ -396,6 +396,7 @@ def extract_pii_dynamic(
     prompt_config_yml_path: str,
     guidelines_path_extracting: str,
     guidelines_path_issue: str,
+    guidelines_path_verify: str,
     conn: Neo4jConnection,
     refine_prompts=False,
     temperature: float = 0.5,
@@ -436,6 +437,8 @@ def extract_pii_dynamic(
         The path to the guidelines for extracting
     guidelines_path_issue : str
         The path to the guidelines for issue solving
+    guidelines_path_verify: str
+        The path to the guidelines for verifying
     conn : Neo4jConnection
         The connection to the Neo4j database
     refine_prompts : bool
@@ -486,6 +489,7 @@ def extract_pii_dynamic(
             pii_name=pii_name,
             guidelines_path_extracting=guidelines_path_extracting,
             guidelines_path_issue=guidelines_path_issue,
+            guidelines_path_verify=guidelines_path_verify,
             refine_prompts=refine_prompts
         )
         result = conv.conversation_loop()

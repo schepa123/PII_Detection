@@ -22,7 +22,7 @@ nest_asyncio.apply()
 async def main():
     """Main function to set up the argument parser and process the file."""
     # TODO: EINBAUEN, dass nach jedem Durchgang die Prompts gelöscht werden
-    
+
     cwd = os.path.realpath(os.path.join(
         os.getcwd(), os.path.dirname(__file__)
     ))
@@ -33,7 +33,7 @@ async def main():
 
     logger.remove()
     logger.add(
-        os.path.join(log_dir, "app_{time:YYYY-MM-DD}.log"),
+        os.path.join(log_dir, "Baum_pp_{time:YYYY-MM-DD}.log"),
         rotation="10 MB",
         retention="7 days",
         compression="zip",
@@ -85,18 +85,21 @@ async def main():
             api_key_meta_expert=API_KEY,
             conn=conn,
             temperature=TEMPERATURE,
+            refine_prompts=False
         )
         print("Finished dynamic PIIs")
 
+        # merge_overlapping_elements EINBAUEN
+
         print("Start static PIIs")
-        cli_helper.extract_pii_static(
-            text=text,
-            api_key=API_KEY,
-            base_url=BASE_URL,
-            model_name=MODEL_STATIC,
-            temperature=TEMPERATURE,
-            conn=conn,
-        )
+        #cli_helper.extract_pii_static(
+        #    text=text,
+        #    api_key=API_KEY,
+        #    base_url=BASE_URL,
+        #    model_name=MODEL_STATIC,
+        #    temperature=TEMPERATURE,
+        #    conn=conn,
+        #)
         print("Finished static PIIs")
 
         result_path = os.path.join(

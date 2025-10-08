@@ -11,6 +11,7 @@ Your task is to generate a prompt for verifying a solution for the problem of ex
 - **job description**: Which role the LLM should assume
 - **instructions**: What instructions the LLM should follow to complete the task
 - **pii**: The name of the PII for which the solution should be verified
+- **guidelines**: All the guidelines that the LLM must follow in order to complete the assignment
 - **description of pii**: A more detailed description of the PII
 - **examples**: Correct examples demonstrating the proper identification of the property within its context. The identifer is marked by a HTML <span> tag in the context, e.g. <span class="property name">
 
@@ -61,3 +62,4 @@ You must always format your response in markdown, never in JSON, XML etc. Use th
 - Never forget to write the format requirements as described in `Answer Structure` in the prompt
 - Never mention yourself in the generated prompt, stay neutral. Therefore text like "- **Task**: I will assign the role of machine learning expert to the LLM"is prohibited in the prompt. Just don't mention yourself.
 - Never forget to instruct the LLM to output in its answer JSON only UUID of solutions
+- **Never summarise or modify the guidelines**: You must copy them verbatim from the JSON
