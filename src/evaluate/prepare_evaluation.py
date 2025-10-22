@@ -1,9 +1,11 @@
 import re
+import uuid
 import json
 import os
 import sys
 sys.path.append(os.path.abspath('..'))
 from src.module import utils
+from src.cli import cli_helper
 
 
 # Mach das Programm auf ein Dokument, runne locate_identifiers und speichere das Ergebnis wo ab und am Ende combine alles.
@@ -245,3 +247,60 @@ def save_text_from_docs(doc_json_path: str) -> None:
             f"{doc_id}.txt"
         ), "w") as f:
             f.write(text)
+
+
+def add_regex_search(
+    conn,
+    texts_path,
+    result_path
+):
+    positions_to_add = []
+    query = """
+    MATCH (n)
+    WHERE n:Nationality_Ethnicity OR n:Facility OR n:Organization OR n:Named_Location
+    RETURN n;
+    """
+    query_result = conn.query(query=query)
+    temp = []
+    identifiers = []
+    for data in query_result:
+        temp.append(next(iter(data.data().values())))
+    identifiers = list(set([element["identifier"] for element in temp]))
+    files = [
+        f for f in os.listdir(texts_path)
+        if os.path.isfile(os.path.join(texts_path, f))
+    ]
+
+    # For loop über alle Dokumente in /Data/texts/
+    for file in files:
+        text = cli_helper.read_text_file(os.path.join(
+            texts_path,
+            file
+        ))
+        text = _replace_characters(text).\
+            replace("\u00A0", " ").\
+            replace("\u00AD", "")
+        results = []
+
+        with open(result_path, "r") as f:
+            nodes_json = json.load(f)
+        list_position_llm = nodes_json[list(nodes_json.keys())[0]]
+
+        for ident in identifiers:
+            print(ident)
+            regex_ident = _build_flexible_context_regex(ident)
+            search_result = regex_ident.search(text)
+            start, end = search_result.span()
+            results.append({
+                "start": start,
+                "end": end
+            })
+
+        for element in results:
+            temp_position = [element["start"], element["end"]]
+            if temp_position not in list_position_llm:
+                positions_to_add.append({
+                    str(uuid.uuid4()): temp_position
+                })
+
+    return positions_to_add

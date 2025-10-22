@@ -2161,20 +2161,23 @@ class MetaExpertConversation():
         ))
         logger.info(f"Verification response'{results}'")
         print(f"Verification response: '{results}'")
-        temp_result = self.process_verification_results(
-            verification_results=results,
-            unverified_solutions=json.loads(self.proposed_solutions[-1])
-        )
+        try:
+            temp_result = self.process_verification_results(
+                verification_results=results,
+                unverified_solutions=json.loads(self.proposed_solutions[-1])
+            )
 
-        for key, value in json.loads(temp_result).items():
-            try:
-                value["bool"]
-            except KeyError:
-                print(f"Retrying Verify for: {self.pii_name}")
-                print(parsed)
-                print(value)
-                # IMPORTANT: propagate the retry result
-                return self.retry_verify(pii_dict=pii_dict)
+            for key, value in json.loads(temp_result).items():
+                try:
+                    value["bool"]
+                except KeyError:
+                    print(f"Retrying Verify for: {self.pii_name}")
+                    print(parsed)
+                    print(value)
+                    # IMPORTANT: propagate the retry result
+                    return self.retry_verify(pii_dict=pii_dict)
+        except AttributeError:
+            return self.retry_verify(pii_dict=pii_dict)
 
         # IMPORTANT: return the dict, not the original string
         return temp_result

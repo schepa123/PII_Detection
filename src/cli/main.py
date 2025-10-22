@@ -52,6 +52,7 @@ async def main():
     conn.query(query="""MATCH (n) DETACH DELETE n""")
     API_KEY = os.getenv("API_KEY")
     MODEL_STATIC = os.getenv("MODEL_STATIC")
+    SEED = os.getenv("SEED")
     MODEL_DYNAMIC = os.getenv("MODEL_DYNAMIC")
     MODEL_PROMPT_CREATER = os.getenv("MODEL_PROMPT_CREATER")
     BASE_URL = os.getenv("BASE_URL")
@@ -67,7 +68,8 @@ async def main():
         if os.path.isfile(os.path.join(texts_path, f))
     ]
 
-    # For loop über alle Dokumente in /Data/texts/
+    # TODO: Das machen wir anders, wir schauen uns jede einzelne
+    # Datei einzeln an
     for file in files:
         text = cli_helper.read_text_file(os.path.join(
             texts_path,

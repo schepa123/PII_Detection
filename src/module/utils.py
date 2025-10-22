@@ -279,7 +279,7 @@ def extract_instruction(
 
 def split_text(
     text: str,
-    paragraphs_to_merge: int = 3
+    paragraphs_to_merge: int = 2
 ) -> list[str]:
     """
     Splits the text into paragraphs and merges them

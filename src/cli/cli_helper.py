@@ -1,4 +1,5 @@
 import argparse
+import random
 import os
 import sys
 import json
@@ -14,6 +15,8 @@ from src.module import llm_agents
 from src.module import utils
 from src.module import llm_agents_static
 from src.module.utils import extract_pii_dynamic as _sync_extract_pii_dynamic
+
+load_dotenv()
 
 def set_up_argparse():
     """Set up the argument parser."""
@@ -190,7 +193,7 @@ async def extract_pii_dynamic(
     property_dict = utils.read_yaml(property_yml_file_path)
 
     # 3) Define concurrency limit
-    semaphore = asyncio.Semaphore(9)  # at most 4 concurrent tasks
+    semaphore = asyncio.Semaphore(19)
 
     async def sem_task(pii_name: str):
         async with semaphore:
@@ -223,3 +226,27 @@ async def extract_pii_dynamic(
         for pii_name in property_dict.keys()
     ]
     await asyncio.gather(*tasks)
+
+
+def get_n_texts_random(
+    path: str,
+    seed: int,
+    n: int
+) -> list[dict]:
+    """
+    Loads file holding the documents and returns n randomely 
+    sampled texts.
+
+    Args:
+        path (str): Path to the the file holding the documents.
+        seed (int): Seed for random.
+        n (int): Number of documents to return.
+
+    Returns:
+        list[dict]: List of n elements with the documents.
+    """
+    random.seed(seed)
+    with open(path, "r") as f:
+        temp = json.load(f)
+
+    return random.sample(temp, n)
