@@ -34,6 +34,12 @@ Your generated prompt will be used as a developer prompt and the user will submi
 - **Incorporate the PII name and its description**: Copy the name and description from the provided JSON object to clearly define the focus for solution correction
 - **Be concise, precise, and avoid unnecessary complexity**
 - You must make sure that your prompt mentions, that the key `"identifier"` is never `None`, but always "that which was extracted from the text"!
+- **Instruct the LLM to exclude prior false identifiers**: Instruct the LLM to never re-extract `identifiers` that appeared verbatim in the wrong_solution list. Tell it that it can correct the `identifiers`, but no re-extract under any circumstances.
+  - Example:
+        - Result from the verifier
+            -  {"adb79661-b018-47": {"reasoning": "The identifier '28 days' imprisonment' represents a duration of time, which is explicitly excluded by the criteria for references to duration of time.", "bool": false, "identifier": "28 days' imprisonment", "context": "the stringency of the proposed order - particularly in the alternative ... it had of 28 days' imprisonment - would have been one of the points on which she would have focused;"}}
+        - This means the LLM can never extract "28 days' imprisonment" again. It is **forbidden** to extract it verbatim again.
+- **Instruct the LLM do use `pii_description` as a basis**: You must tell the LLM to use the `pii_description` from the `user input` as a basis for every action and especially consider any information on what to exclude. 
 
 
 ## Wrong solution Template

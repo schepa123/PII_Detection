@@ -173,30 +173,7 @@ async def extract_pii_dynamic(
     refine_prompts: bool
 ) -> None:
     """
-    Extract PII using dynamic methods.
-
-    Parameters:
-    ---------
-    text : str
-        The text from which to extract PII.
-    base_url : str
-        The base URL for the LLM API.
-    model_name_prompt_creater : str
-        The model name for the prompt creator.
-    model_name_meta_expert : str
-        The model name for the meta expert.
-    api_key_prompt_creater : str
-        The API key for the prompt creator.
-    api_key_meta_expert : str
-        The API key for the meta expert.
-    conn : neo4j_conn.Neo4jConnection
-        The Neo4j connection object.
-    temperature : float
-        The temperature for the LLM API.
-
-    Returns:
-    -------
-    None
+    Extract PII using dynamic methods with a concurrency limit of 4.
     """
     # 1) Build local paths
     (
@@ -212,11 +189,12 @@ async def extract_pii_dynamic(
     # 2) Load PII definitions
     property_dict = utils.read_yaml(property_yml_file_path)
 
-    # 3) Create thread tasks for each PII type
-    tasks = []
-    for pii_name in property_dict.keys():
-        tasks.append(
-            asyncio.to_thread(
+    # 3) Define concurrency limit
+    semaphore = asyncio.Semaphore(9)  # at most 4 concurrent tasks
+
+    async def sem_task(pii_name: str):
+        async with semaphore:
+            return await asyncio.to_thread(
                 _sync_extract_pii_dynamic,
                 pii_name=pii_name,
                 category="independent",
@@ -238,7 +216,10 @@ async def extract_pii_dynamic(
                 temperature=temperature,
                 base_url=base_url,
             )
-        )
 
-    # 4) Run all extractions in parallel
+    # 4) Create and run tasks
+    tasks = [
+        asyncio.create_task(sem_task(pii_name))
+        for pii_name in property_dict.keys()
+    ]
     await asyncio.gather(*tasks)

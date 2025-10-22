@@ -20,9 +20,11 @@ Your generated prompt will be used as a developer prompt and the user will submi
 ## Instructions
 - Always remember to format your response in the struture as defined in the section `Answer Structure`.
 - Based on the provided instructions, create a detailed plan for how the LLM should extract the PII described in the provided JSON object.
-- Be sure to mention the PII name and it's description from the JSON object
+- Be sure to mention the PII name and it's description from the JSON object.
 - Copy the guidelines exactly as they appear in the JSON, without any changes or omissions.
-- Don't create examples for your prompts, another expert will handle this
+- Don't create examples for your prompts, another expert will handle this.
+- **Instruct the LLM do use `description of pii` as a basis**: You must tell the LLM to use the `pii_description` from the `user input` as a basis for every action and especially consider any information on what to exclude.
+- **Write the `description of pii` verbatim in the prompt**: It is very important that you write the `description of pii` verbatim in the prompt, to better guide the LLM. Without this, your result is invalid.
 
 ## Answer Structure
 You must always format your response in markdown, never in JSON, XML etc. Use the following struture as section headers for your reponse and never create other sections.

@@ -170,7 +170,6 @@ def locate_identifiers(
     return {doc_id: position_list}
 
 
-
 def merge_overlapping_elements(
     position_dict: dict[str, list[int]]
 ) -> dict[str, list[int]]:

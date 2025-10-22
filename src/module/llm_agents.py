@@ -667,7 +667,7 @@ class MetaPrompter(LLMAgent):
             """),
             response=response
         )
-        
+
         return self._extract_json_from_response(response), user_prompt_text
 
     def return_prompt(
@@ -1021,6 +1021,10 @@ class MetaPrompterIndependent(MetaPrompter):
             developer_prompt=generated_prompts,
             conversation_list=conversation_list
         )
+        print("--")
+        print("response\n")
+        print(response)
+        print("--")
         response = self._extract_json_from_response(response)
         return json.dumps(response)
 
@@ -1042,12 +1046,16 @@ class MetaPrompterIndependent(MetaPrompter):
             The solution with the UUID
         """
         uuid_list = []
-        for result in solution["extracted_information"]:
-            uuid_list.append(
-                {str(uuid.uuid4())[:16]: result}
-            )
+        try:
+            for result in solution["extracted_information"]:
+                    uuid_list.append(
+                        {str(uuid.uuid4())[:16]: result}
+                    )
 
-        return uuid_list
+            return uuid_list
+        except:
+            print(solution)
+
 
     async def send_solutions_for_verification(
         self,
@@ -1515,7 +1523,6 @@ class MetaPrompterIndividuals(MetaPrompter):
         further_solutions = self.prepare_solution_for_verification(
             json.dumps(further_solutions)
         )
-        print()
         correct_solutions, _ = self.categorize_solutions(
             solutions=old_response,
             verification_results=verification_results
@@ -1845,7 +1852,7 @@ class MetaExpertConversation():
             case "extracting":
                 self.run_prompt(type="extracting")
             case "verification":
-                if self.verification_attempt >= 5:
+                if self.verification_attempt >= 2:
                     print(f"Too many failed attempts for {self.pii_name}")
                     self.verification_attempt = 0
                     return self.end_conversation()
@@ -1926,6 +1933,7 @@ class MetaExpertConversation():
                 .replace("{{response}}", response)
         except Exception as e:
             print("---")
+            print("\n\n\n\n\n\n\n")
             print(self.pii_name)
             print(previous_step)
             print(response)
@@ -1935,6 +1943,11 @@ class MetaExpertConversation():
                 .replace("{{expert}}", "None") \
                 .replace("{{previous_step}}", previous_step) \
                 .replace("{{response}}", previous_step)
+
+            print("---")
+            print(prompt)
+            print("---")
+            print("\n\n\n\n\n\n\n")
 
         self.add_to_conversation_list(
             role="user", content=prompt

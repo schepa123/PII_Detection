@@ -270,26 +270,34 @@ class LLMAgent:
             )
         except (AttributeError, json.JSONDecodeError, IndexError):
             try:
-                pattern = r"```json\s*\n([\s\S]*?)\n```"
-                match = re.findall(pattern, response)[0]
-                return match.replace("```json", "")
+                return json.loads(
+                    re.search(r"(?s)`\s*(\{.*?\})\s*`", response).group(1)
+            )
             except (AttributeError, json.JSONDecodeError, IndexError):
                 try:
-                    return json.loads(
-                        re.search(r"```(.*?)```", response, re.DOTALL).group(1)
-                    )
+                    return json.loads(response)
                 except (AttributeError, json.JSONDecodeError, IndexError):
                     try:
-                        return json.loads(response)
+                        pattern = r"```json\s*\n([\s\S]*?)\n```"
+                        match = re.findall(pattern, response)[0]
+                        return match.replace("```json", "")
                     except (AttributeError, json.JSONDecodeError, IndexError):
                         try:
-                            return self._extract_json_erroneous(response)
-                        except (AttributeError, json.JSONDecodeError, IndexError) as e:
-                            print(f"""
-                            Json could not be found for response:
-                            {response}
-                            """)
-                            raise e
+                            return json.loads(
+                                re.search(r"```(.*?)```", response, re.DOTALL).group(1)
+                            )
+                        except (AttributeError, json.JSONDecodeError, IndexError):
+                            try:
+                                return json.loads(response)
+                            except (AttributeError, json.JSONDecodeError, IndexError):
+                                try:
+                                    return self._extract_json_erroneous(response)
+                                except (AttributeError, json.JSONDecodeError, IndexError) as e:
+                                    print(f"""
+                                    Json could not be found for response:
+                                    {response}
+                                    """)
+                                    raise e
 
     def load_yml(
         self,

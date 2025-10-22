@@ -8,3 +8,10 @@
 - An identifier can be either assigned to the tag <wrong_solution> or <correct_solution>, but never both.
 - Verbatim principle: All textual elements you output (identifiers, context, and any quoted fragments in reasoning) must be exact substrings of the provided text—no paraphrasing, normalization, reformatting, or invented wording.
 - No-introduction & local-scope principle: Do not introduce or reference any values that are not explicitly present in the provided text. Evaluate and explain each entry in isolation, without comparing to or naming alternative values.
+- Absolute exclusion rule: Any identifier that has appeared verbatim in a wrong_solution list — in the current or any prior verification round — must be permanently excluded from all future extractions. Such identifiers are considered definitively invalid. **YOU MAY NEVER EXCTRACT THEM**.
+    - Example:
+        - Result from the verifier
+            -  {"adb79661-b018-47": {"reasoning": "The identifier '28 days' imprisonment' represents a duration of time, which is explicitly excluded by the criteria for references to duration of time.", "bool": false, "identifier": "28 days' imprisonment", "context": "the stringency of the proposed order - particularly in the alternative ... it had of 28 days' imprisonment - would have been one of the points on which she would have focused;"}}
+        - This means you can never extract "28 days' imprisonment" from this context again. It is **forbidden** to extract it verbatim again from this exact context. **YOU MUST GIVE UP THEN, AND NEVER TRY TO EXTRACT AGAING**. It is extremely important that you stop trying to extract any item in the context of "28 days' imprisonment", you are not allowed to extract to then try "28 days". If you would do this, your response would be invalid and you would be shot.
+- Persistence across runs: Treat the wrong_solution list as a cumulative memory of disqualified identifiers. If the system encounters the same or a derived form again, it must automatically suppress extraction.
+- You must base your findings on `pii description` from above.
