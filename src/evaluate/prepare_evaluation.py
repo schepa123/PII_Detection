@@ -6,6 +6,7 @@ import sys
 sys.path.append(os.path.abspath('..'))
 from src.module import utils
 from src.cli import cli_helper
+from src.module import neo4j_conn
 
 
 # Mach das Programm auf ein Dokument, runne locate_identifiers und speichere das Ergebnis wo ab und am Ende combine alles.
@@ -86,7 +87,7 @@ def locate_identifiers(
     position of a PII.
     """
     results: list[dict] = []
-    position_list: list[dict[str, list[int]]] = []
+    position_list: list[list[int]] = []
 
     # Normalize source text (no '.' -> ','); also fix NBSP/soft hyphen
     original_text = _replace_characters(original_text).\
@@ -167,13 +168,13 @@ def locate_identifiers(
                 print(f"Context not found for uuid {rec.get('uuid')!r}")
 
     for r in results:
-        position_list.append({r["uuid"]: [r["start"], r["end"]]})
+        position_list.append([r["start"], r["end"]])
 
     return {doc_id: position_list}
 
 
 def merge_overlapping_elements(
-    position_dict: dict[str, list[int]]
+    position_dict: dict[str, list[list[int]]]
 ) -> dict[str, list[int]]:
     """
     Merges overlapping position ranges if the left element of
@@ -250,10 +251,10 @@ def save_text_from_docs(doc_json_path: str) -> None:
 
 
 def add_regex_search(
-    conn,
+    conn: neo4j_conn.Neo4jConnection,
     texts_path,
     result_path
-):
+) -> list[list[int]]:
     positions_to_add = []
     query = """
     MATCH (n)
@@ -299,8 +300,6 @@ def add_regex_search(
         for element in results:
             temp_position = [element["start"], element["end"]]
             if temp_position not in list_position_llm:
-                positions_to_add.append({
-                    str(uuid.uuid4()): temp_position
-                })
+                positions_to_add.append(temp_position)
 
     return positions_to_add

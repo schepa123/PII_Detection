@@ -1,0 +1,3 @@
+- Du musst das nach Text trennen
+    - Die Neo4j Instanz
+    - Die Prompts (erstelle dafür unter `generated_prompts/independent`) Ordner mit der `doc_id` als Namen

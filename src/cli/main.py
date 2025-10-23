@@ -52,104 +52,48 @@ async def main():
     conn.query(query="""MATCH (n) DETACH DELETE n""")
     API_KEY = os.getenv("API_KEY")
     MODEL_STATIC = os.getenv("MODEL_STATIC")
-    SEED = os.getenv("SEED")
+    SEED = int(os.getenv("SEED"))
     MODEL_DYNAMIC = os.getenv("MODEL_DYNAMIC")
     MODEL_PROMPT_CREATER = os.getenv("MODEL_PROMPT_CREATER")
     BASE_URL = os.getenv("BASE_URL")
     TEMPERATURE = float(os.getenv("TEMPERATURE"))
 
-    texts_path = os.path.join(root_dir, "Data", "texts")
-    output_path = os.path.join(
-        root_dir,
-        "Output"
+    documents = cli_helper.get_n_texts_random(
+        path=args.input_path,
+        seed=SEED,
+        n=int(args.n_text)
     )
+    cli_helper.save_text_from_documents(
+        document_list=documents,
+        save_path=args.output_path
+    )
+
     files = [
-        f for f in os.listdir(texts_path)
-        if os.path.isfile(os.path.join(texts_path, f))
+        f for f in os.listdir(args.output_path)
+        if os.path.isfile(os.path.join(args.output_path, f))
     ]
 
-    # TODO: Das machen wir anders, wir schauen uns jede einzelne
-    # Datei einzeln an
-    for file in files:
-        text = cli_helper.read_text_file(os.path.join(
-            texts_path,
-            file
-        ))
-        doc_id = file.split(".")[0]
+    sem = asyncio.Semaphore(3)
 
-        print("Start dynamic PIIs")
-        await cli_helper.extract_pii_dynamic(
-            text=text,
-            base_url=BASE_URL,
-            model_name_prompt_creater=MODEL_PROMPT_CREATER,
-            model_name_meta_expert=MODEL_DYNAMIC,
-            api_key_prompt_creater=API_KEY,
-            api_key_meta_expert=API_KEY,
-            conn=conn,
-            temperature=TEMPERATURE,
-            refine_prompts=False
-        )
-        print("Finished dynamic PIIs")
-
-        # merge_overlapping_elements EINBAUEN
-
-        print("Start static PIIs")
-        #cli_helper.extract_pii_static(
-        #    text=text,
-        #    api_key=API_KEY,
-        #    base_url=BASE_URL,
-        #    model_name=MODEL_STATIC,
-        #    temperature=TEMPERATURE,
-        #    conn=conn,
-        #)
-        print("Finished static PIIs")
-
-        result_path = os.path.join(
-            output_path, f"{doc_id}.json"
-        )
-
-        conn.save_nodes_as_json(
-            path=result_path
-        )
-
-        with open(result_path, "r") as f:
-            nodes_json = json.load(f)
-
-        position_dict = prepare_evaluation.locate_identifiers(
-            nodes_json,
-            original_text=text,
-            doc_id=doc_id
-        )
-        print(position_dict)
-
-        with open(os.path.join(
-            output_path, f"{doc_id}_positions.json"
-        ), "w") as f:
-            json.dump(
-                position_dict, f
+    async def sem_task(file_name):
+        async with sem:
+            file_path = os.path.join(args.output_path, file_name)
+            return await cli_helper.run_pii(
+                file_path=file_path,
+                output_path=args.output_path,
+                conn=conn,
+                base_url=BASE_URL,
+                model_name_prompt_creater=MODEL_PROMPT_CREATER,
+                model_name_meta_expert=MODEL_DYNAMIC,
+                api_key_prompt_creater=API_KEY,
+                api_key_meta_expert=API_KEY,
+                temperature=TEMPERATURE,
+                refine_prompts=True,
             )
 
-        logger.info(f"Finished {file}")
-
-    position_files = [
-        f for f in os.listdir(output_path)
-        if os.path.isfile(os.path.join(output_path, f))
-    ]
-
-    position_dict_list = []
-    for file in position_files:
-        if not file.endswith("_positions.json"):
-            continue
-        with open(os.path.join(output_path, file), "r") as f:
-            position_dict_list.append(
-                json.load(f)
-            )
-
-    with open(os.path.join(output_path, "final.json"), "w") as f:
-        json.dump(
-            prepare_evaluation.combine(position_dict_list), f
-        )
-
+    # Run all PII tasks with concurrency cap of 3
+    await asyncio.gather(*(sem_task(f) for f in files))
+    logger.info("All files processed.")
 
 
 

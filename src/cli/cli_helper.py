@@ -14,18 +14,34 @@ from src.module import neo4j_conn
 from src.module import llm_agents
 from src.module import utils
 from src.module import llm_agents_static
+from src.evaluate import prepare_evaluation
 from src.module.utils import extract_pii_dynamic as _sync_extract_pii_dynamic
 
 load_dotenv()
 
+
 def set_up_argparse():
     """Set up the argument parser."""
-    parser = argparse.ArgumentParser(description="Process a text file.")
+    parser = argparse.ArgumentParser(description="Start PII process.")
     parser.add_argument(
-        "text_path", type=str, help="Path to the text file to process"
+        "--input_path",
+        type=str,
+        required=True,
+        help="Path to the input file or directory."
     )
+
     parser.add_argument(
-        "result_path", type=str, help="Path to the JSON file to save results"
+        "--output_path",
+        type=str,
+        required=True,
+        help="Path where the output should be saved."
+    )
+
+    parser.add_argument(
+        "--n_text",
+        type=str,
+        required=True,
+        help="Number of text to get."
     )
 
     return parser
@@ -234,7 +250,7 @@ def get_n_texts_random(
     n: int
 ) -> list[dict]:
     """
-    Loads file holding the documents and returns n randomely 
+    Loads file holding the documents and returns n randomely
     sampled texts.
 
     Args:
@@ -250,3 +266,97 @@ def get_n_texts_random(
         temp = json.load(f)
 
     return random.sample(temp, n)
+
+
+def save_text_from_documents(
+    document_list: list[dict],
+    save_path: str
+) -> None:
+    """
+    Takes the documen_list and saves every text from a document as a
+    text file with doc_id as file_name.
+
+    Args:
+        document_list (list[dict]): List of documents
+        save_path (str): Path where to save documents to.
+
+    Returns:
+        None.
+    """
+    for document in document_list:
+        doc_id = document["doc_id"]
+        text = document["text"]
+        with open(os.path.join(save_path, f"{doc_id}.txt"), "w") as f:
+            f.write(text)
+
+
+async def run_pii(
+    file_path: str,
+    output_path: str,
+    conn: neo4j_conn.Neo4jConnection,
+    base_url: str,
+    model_name_prompt_creater: str,
+    model_name_meta_expert: str,
+    api_key_prompt_creater: str,
+    api_key_meta_expert: str,
+    temperature: float,
+    refine_prompts: bool
+):
+    """
+    123
+    """
+    text = read_text_file(file_path)
+    doc_id = file_path.split(".")[0]
+    print(f"Start dynamic PIIs for doc: {doc_id}")
+    await extract_pii_dynamic(
+        text=text,
+        base_url=base_url,
+        model_name_prompt_creater=model_name_prompt_creater,
+        model_name_meta_expert=model_name_meta_expert,
+        api_key_prompt_creater=api_key_prompt_creater,
+        api_key_meta_expert=api_key_meta_expert,
+        conn=conn,
+        temperature=temperature,
+        refine_prompts=refine_prompts
+    )
+    print("Finished dynamic PIIs for doc: {doc_id}")
+    print("Start static PIIs")
+    extract_pii_static(
+        text=text,
+        api_key=api_key_prompt_creater,
+        base_url=base_url,
+        model_name=model_name_prompt_creater,
+        temperature=temperature,
+        conn=conn,
+    )
+    print("Finished static PIIs")
+    result_path = os.path.join(
+        output_path, f"{doc_id}.json"
+    )
+    conn.save_nodes_as_json(
+        path=result_path
+    )
+    with open(result_path, "r") as f:
+        nodes_json = json.load(f)
+
+    position_dict = prepare_evaluation.locate_identifiers(
+        nodes_json,
+        original_text=text,
+        doc_id=doc_id
+    )
+    temp_to_add = prepare_evaluation.add_regex_search(
+        conn=conn,
+        texts_path=file_path,
+        result_path=result_path
+    )
+    position_dict[doc_id].extend(temp_to_add)
+    position_dict = prepare_evaluation.merge_overlapping_elements(
+        position_dict
+    )
+    print(f"position_dict {doc_id}: {position_dict}")
+    with open(os.path.join(
+        output_path, f"{doc_id}_positions.json"
+    ), "w") as f:
+        json.dump(position_dict, f)
+
+    logger.info(f"Finished {doc_id}")
