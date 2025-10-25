@@ -25,11 +25,13 @@ class MetaExpertConversation():
         agent: LLMAgent,
         text: str,
         prompt_folder: str,
-        conn: Neo4jConnection
+        conn: Neo4jConnection,
+        doc_id: str
     ):
         self.agent = agent
         self.text = text
         self.conn = conn
+        self.doc_id = doc_id
         self.prompt_folder = prompt_folder
         self.proposed_solutions = []
         self.verify_solutions = []
@@ -110,8 +112,9 @@ class MetaExpertConversation():
             The persons as a JSON string
         """
 
-        query = """
+        query = f"""
         MATCH (designation:Entity_designation)
+        WHERE designation.doc_id = {self.doc_id}
         RETURN designation
         """
         result = self.conn.query(query)
@@ -631,17 +634,21 @@ class ResultCorrecter():
         The prompt for the correction
     response : dict
         The response from the LLM
+    doc_id : str
+        The ID of the document.
     """
     def __init__(
         self,
         agent: LLMAgent,
         prompt_folder: str,
-        conn: Neo4jConnection
+        conn: Neo4jConnection,
+        doc_id: str
     ):
         self.agent = agent
         self.conn = conn
         self.prompt_folder = prompt_folder
         self.response = None
+        self.doc_id = doc_id
         self.load_correction_prompt()
 
     def load_correction_prompt(self) -> None:
@@ -690,7 +697,7 @@ class ResultCorrecter():
         """
         conversation_list = [{
             "role": "user",
-            "content": f"<person_dict>{self.conn.read_persons()}</person_dict>"
+            "content": f"<person_dict>{self.conn.read_persons(self.doc_id)}</person_dict>"
         }]
         response_temp = self.agent.send_prompt(
             developer_prompt=self.correction_prompt,
@@ -714,8 +721,14 @@ class ResultCorrecter():
         None
 
         """
-        self.conn.drop_node_category("Entity_designation")
-        self.conn.create_nodes_individual(result=self.response)
+        self.conn.drop_node_category(
+            category="Entity_designation",
+            doc_id=self.doc_id
+        )
+        self.conn.create_nodes_individual(
+            result=self.response,
+            doc_id=self.doc_id
+        )
 
     def correct_result(self) -> None:
         """

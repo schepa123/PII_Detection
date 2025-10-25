@@ -40,6 +40,7 @@ class PromptCreater(LLMAgent):
             api_key=api_key,
             base_url=base_url
         )
+        self.doc_id = doc_id
         self.yml = utils.read_yaml(property_yml_file)
         self.category = category
         self.refine_prompts = refine_prompts
@@ -543,6 +544,7 @@ class MetaPrompter(LLMAgent):
     def __init__(
         self,
         local: bool,
+        doc_id: str,
         prompt_folder: str,
         yml_file: str,
         api_key: str,
@@ -566,6 +568,7 @@ class MetaPrompter(LLMAgent):
         )
         self.yml = utils.read_yaml(yml_file)
         self.conn = conn
+        self.doc_id = doc_id
         self.prompt_creater = prompt_creater
         prompt_config_yml = utils.read_yaml(prompt_config_yml)
         self.prompts = utils.set_prompts_argument(
@@ -956,6 +959,7 @@ class MetaPrompterIndependent(MetaPrompter):
     def __init__(
         self,
         prompt_folder: str,
+        doc_id: str,
         yml_file: str,
         api_key: str,
         category: str,
@@ -970,6 +974,7 @@ class MetaPrompterIndependent(MetaPrompter):
     ):
         super().__init__(
             local=local,
+            doc_id=doc_id,
             prompt_folder=prompt_folder,
             model_name=model_name,
             temperature=temperature,
@@ -1206,6 +1211,7 @@ class MetaPrompterIndividuals(MetaPrompter):
     def __init__(
         self,
         local: bool,
+        doc_id: str,
         prompt_folder: str,
         yml_file: str,
         api_key: str,
@@ -1220,6 +1226,7 @@ class MetaPrompterIndividuals(MetaPrompter):
     ):
         super().__init__(
             local=local,
+            doc_id=doc_id,
             prompt_folder=prompt_folder,
             model_name=model_name,
             temperature=temperature,
@@ -1247,8 +1254,9 @@ class MetaPrompterIndividuals(MetaPrompter):
             The persons as a JSON string
         """
 
-        query = """
+        query = f"""
         MATCH (designation:Entity_designation)
+        WHERE designation = {self.doc_id}
         RETURN designation
         """
         result = self.conn.query(query)

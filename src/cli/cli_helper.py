@@ -47,7 +47,7 @@ def set_up_argparse():
     return parser
 
 
-def create_paths() -> tuple[str, str, str, str, str, str, str]:
+def create_paths(doc_id: str) -> tuple[str, str, str, str, str, str, str]:
     """
     Create paths for various files and folders used in the project.
 
@@ -74,8 +74,9 @@ def create_paths() -> tuple[str, str, str, str, str, str, str]:
     ))
     prompt_folder_to_save = os.path.abspath(os.path.join(
         file_path,
-        "../../generated_prompts"
+        f"../../generated_prompts/{doc_id}"
     ))
+    print(f"prompt_folder_to_save: {prompt_folder_to_save}")
     property_yml_file_path = os.path.abspath(os.path.join(
         file_path,
         "../../entity_description/properties.yml"
@@ -108,6 +109,51 @@ def create_paths() -> tuple[str, str, str, str, str, str, str]:
     )
 
 
+def create_folder_generated_prompts(
+    prompt_folder_to_save: str
+) -> None:
+    """
+    Creates the folers for the generate prompts.
+
+    Args:
+        prompt_folder_to_save (str): Location to where to save
+        the prompts to.
+
+    Returns:
+        None.
+    """
+    os.makedirs(prompt_folder_to_save)
+    os.makedirs(os.path.join(prompt_folder_to_save, "independent"))
+    prompt_folder_to_save = os.path.join(
+        prompt_folder_to_save,
+        "independent"
+    )
+
+    os.makedirs(os.path.join(prompt_folder_to_save, "age_number"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "charges"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "code"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "court_case_name"))
+    os.makedirs(os.path.join(
+        prompt_folder_to_save, "Crime_Related_Circumstances")
+    )
+    os.makedirs(os.path.join(prompt_folder_to_save, "date"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "duration"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "facility"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "health"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "item"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "job_title"))
+    os.makedirs(os.path.join(
+        prompt_folder_to_save, "laws_legal_provisions_Name_Number")
+    )
+    os.makedirs(os.path.join(prompt_folder_to_save, "named_location"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "Nationality_Ethnicity"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "organization"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "political_stance"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "quantity"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "real_estate"))
+    os.makedirs(os.path.join(prompt_folder_to_save, "realative_time"))
+
+
 def read_text_file(file_path) -> str:
     """
     Read the content of a text file.
@@ -136,6 +182,7 @@ def read_text_file(file_path) -> str:
 
 def extract_pii_static(
     text: str,
+    doc_id: str,
     api_key: str,
     base_url: str,
     model_name: str,
@@ -149,6 +196,8 @@ def extract_pii_static(
     ---------
     text : str
         The text from which to extract PII.
+    doc_id : str
+        The ID of the document.
     api_key : str
         The API key for the LLM.
     base_url : str
@@ -167,6 +216,7 @@ def extract_pii_static(
     utils.extract_pii_static(
         pii_name="Entity_designation",
         text=text,
+        doc_id=doc_id,
         drop_category=True,
         prompt_folder=os.path.abspath(os.path.join(
             os.path.dirname(__file__),
@@ -182,6 +232,7 @@ def extract_pii_static(
 
 async def extract_pii_dynamic(
     text: str,
+    doc_id: str,
     base_url: str,
     model_name_prompt_creater: str,
     model_name_meta_expert: str,
@@ -203,7 +254,11 @@ async def extract_pii_dynamic(
         guidelines_path_extracting,
         guidelines_path_issue,
         guidelines_path_verify
-    ) = create_paths()
+    ) = create_paths(doc_id=doc_id)
+
+    create_folder_generated_prompts(
+        prompt_folder_to_save=prompt_folder_to_save
+    )
 
     # 2) Load PII definitions
     property_dict = utils.read_yaml(property_yml_file_path)
@@ -234,6 +289,7 @@ async def extract_pii_dynamic(
                 refine_prompts=refine_prompts,
                 temperature=temperature,
                 base_url=base_url,
+                doc_id=doc_id
             )
 
     # 4) Create and run tasks
@@ -306,7 +362,8 @@ async def run_pii(
     123
     """
     text = read_text_file(file_path)
-    doc_id = file_path.split(".")[0]
+    pri
+    doc_id = file_path.split(".")[0].split("/")[-1]
     print(f"Start dynamic PIIs for doc: {doc_id}")
     await extract_pii_dynamic(
         text=text,
@@ -317,12 +374,14 @@ async def run_pii(
         api_key_meta_expert=api_key_meta_expert,
         conn=conn,
         temperature=temperature,
-        refine_prompts=refine_prompts
+        refine_prompts=refine_prompts,
+        doc_id=doc_id
     )
     print("Finished dynamic PIIs for doc: {doc_id}")
     print("Start static PIIs")
     extract_pii_static(
         text=text,
+        doc_id=doc_id,
         api_key=api_key_prompt_creater,
         base_url=base_url,
         model_name=model_name_prompt_creater,
@@ -334,7 +393,8 @@ async def run_pii(
         output_path, f"{doc_id}.json"
     )
     conn.save_nodes_as_json(
-        path=result_path
+        path=result_path,
+        doc_id=doc_id
     )
     with open(result_path, "r") as f:
         nodes_json = json.load(f)
@@ -347,7 +407,8 @@ async def run_pii(
     temp_to_add = prepare_evaluation.add_regex_search(
         conn=conn,
         texts_path=file_path,
-        result_path=result_path
+        result_path=result_path,
+        doc_id=doc_id
     )
     position_dict[doc_id].extend(temp_to_add)
     position_dict = prepare_evaluation.merge_overlapping_elements(

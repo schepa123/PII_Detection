@@ -253,12 +253,14 @@ def save_text_from_docs(doc_json_path: str) -> None:
 def add_regex_search(
     conn: neo4j_conn.Neo4jConnection,
     texts_path,
-    result_path
+    result_path,
+    doc_id: str
 ) -> list[list[int]]:
     positions_to_add = []
-    query = """
+    query = f"""
     MATCH (n)
     WHERE n:Nationality_Ethnicity OR n:Facility OR n:Organization OR n:Named_Location
+    AND n.doc_id = {doc_id}
     RETURN n;
     """
     query_result = conn.query(query=query)

@@ -310,6 +310,7 @@ def split_text(
 
 def extract_pii_static(
     pii_name: str,
+    doc_id: str,
     text: str,
     drop_category: bool,
     prompt_folder: str,
@@ -328,6 +329,8 @@ def extract_pii_static(
     ----------
     pii_name : str
         The name of the PII
+    doc_id : str
+        The ID of the document.
     text : str
         The text to extract the PII from
     drop_category : bool
@@ -358,11 +361,15 @@ def extract_pii_static(
     correcter = llm_agents_static.ResultCorrecter(
         agent=agent,
         prompt_folder=prompt_folder,
-        conn=conn
+        conn=conn,
+        doc_id=doc_id
     )
 
     if drop_category:
-        conn.drop_node_category(pii_name)
+        conn.drop_node_category(
+            category=pii_name,
+            doc_id=doc_id
+        )
 
     for i, text in enumerate(text_splitted):
         print(f"Processing text {i + 1}/{len(text_splitted)}")
@@ -371,11 +378,15 @@ def extract_pii_static(
             agent=agent,
             text=text,
             prompt_folder=prompt_folder,
-            conn=conn
+            conn=conn,
+            doc_id=doc_id
         )
         result = conv.conversation_loop()
         if result:
-            conn.create_nodes_individual(result=result)
+            conn.create_nodes_individual(
+                result=result,
+                doc_id=doc_id
+            )
 
     correcter.correct_result()
 
@@ -384,6 +395,7 @@ def extract_pii_dynamic(
     pii_name: str,
     category: str,
     text: str,
+    doc_id: str,
     drop_category: bool,
     prompt_handcrafted_folder: str,
     prompt_folder_to_save: str,
@@ -410,9 +422,11 @@ def extract_pii_dynamic(
     pii_name : str
         The name of the PII
     category : str
-            The category to select the prompts for
+        The category to select the prompts for
     text : str
         The text to extract the PII from
+    doc_id : str
+        ID of document
     drop_category : bool
         If True, the category will be dropped in the database
     prompt_handcrafted_folder : str
@@ -451,7 +465,10 @@ def extract_pii_dynamic(
     None
     """
     if drop_category:
-        conn.drop_node_category(pii_name)
+        conn.drop_node_category(
+            pii_name,
+            doc_id=doc_id
+        )
     text_splitted = split_text(text)
     prompt_creater = llm_agents.PromptCreater(
         prompt_handcrafted_folder=prompt_handcrafted_folder,
@@ -467,6 +484,7 @@ def extract_pii_dynamic(
     )
     agent_independent = llm_agents.MetaPrompterIndependent(
         prompt_folder=prompt_handcrafted_folder,
+        doc_id=doc_id,
         model_name=model_name_meta_expert,
         api_key=api_key_meta_expert,
         base_url=base_url,
@@ -495,5 +513,6 @@ def extract_pii_dynamic(
         result = conv.conversation_loop()
         conn.create_nodes_pii_independent(
             pii=pii_name,
-            result=result
+            result=result,
+            doc_id=doc_id
         )

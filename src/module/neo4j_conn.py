@@ -35,13 +35,14 @@ class Neo4jConnection:
                 session.close()
         return response
 
-    def read_persons(self) -> str:
+    def read_persons(self, doc_id: str) -> str:
         """
         Reads the persons from the database and returns them as a JSON string
 
         Parameters
         ----------
-        None
+        doc_id : str
+            The ID of the document.
 
         Returns
         -------
@@ -49,8 +50,9 @@ class Neo4jConnection:
             The persons as a JSON string
         """
 
-        query = """
+        query = f"""
         MATCH (designation:Entity_designation)
+        WHERE designation.doc = {doc_id}
         RETURN designation
         """
         result = self.query(query)
@@ -68,7 +70,8 @@ class Neo4jConnection:
     def create_nodes_pii_independent(
         self,
         pii: str,
-        result: dict[str, dict[str, str, str, str, str]]
+        result: dict[str, dict[str, str, str, str, str]],
+        doc_id: str
     ) -> None:
         """
         Takes the results and creates nodes for each result
@@ -79,6 +82,8 @@ class Neo4jConnection:
             The property which the nodes will be created for
         result : dict
             The result of the request to the LLM
+        doc_id : str
+            The ID of the document.
 
         Returns
         -------
@@ -103,6 +108,7 @@ class Neo4jConnection:
                 ON CREATE SET p.uuid = pii.uuid
                 SET p.identifier = pii.identifier
                 SET p.context = pii.context
+                SET p.doc_id = {doc_id}
             """
 
             self.query(
@@ -118,7 +124,8 @@ class Neo4jConnection:
     def create_nodes_pii(
         self,
         pii: str,
-        result: dict[str, dict[str, str, str, str, str]]
+        result: dict[str, dict[str, str, str, str, str]],
+        doc_id: str
     ) -> None:
         """
         Takes the results and creates nodes for each result
@@ -129,6 +136,8 @@ class Neo4jConnection:
             The property which the nodes will be created for
         result : dict
             The result of the request to the LLM
+        doc_id : str
+            The ID of the document.
 
         Returns
         -------
@@ -147,10 +156,11 @@ class Neo4jConnection:
         query = f"""
         UNWIND $piis AS pii
         MERGE (p:{pii} {{name: pii.name}})
+        SET p.doc_id = $doc_id
         """
         self.query(
             query,
-            parameters={'piis': node_dict[pii]}
+            parameters={'piis': node_dict[pii], 'doc_id': doc_id}
         )
 
     def catch_key_exception(self, value: dict[str, str]) -> str:
@@ -188,7 +198,8 @@ class Neo4jConnection:
 
     def create_nodes_individual(
         self,
-        result: dict[str, dict[str, str, str, str, str]]
+        result: dict[str, dict[str, str, str, str, str]],
+        doc_id: str
     ) -> None:
         """
         Takes the results and creates nodes for each individual
@@ -197,6 +208,8 @@ class Neo4jConnection:
         ----------
         result : dict
             The result of the individual extraction from the LLM
+        doc_id : str
+            The ID of the document.
 
         Returns
         -------
@@ -219,10 +232,14 @@ class Neo4jConnection:
             ON CREATE SET i.full_name = individual.full_name
             SET i.abbreviations = individual.abbreviations
             SET i.aliases = individual.aliases
+            SET i.doc_id = $doc_id
         """
         self.query(
             query,
-            parameters={'individuals': node_dict["Entity_designation"]}
+            parameters={
+                'individuals': node_dict["Entity_designation"],
+                'doc_id': doc_id
+            }
         )
 
     def create_relationships(
@@ -269,7 +286,11 @@ class Neo4jConnection:
             parameters={"Links": links_dict["Links"]}
         )
 
-    def drop_node_category(self, category: str) -> None:
+    def drop_node_category(
+        self,
+        category: str,
+        doc_id: str
+    ) -> None:
         """
         Drops all nodes of a certain category
 
@@ -277,6 +298,8 @@ class Neo4jConnection:
         ----------
         category : str
             The category of the nodes to be dropped
+        doc_id : str
+            The ID of the document.
 
         Returns
         -------
@@ -284,6 +307,7 @@ class Neo4jConnection:
         """
         query = f"""
         MATCH (n:{category})
+        WHERE n.doc_id = {doc_id}
         DETACH DELETE n
         RETURN n
         """
@@ -291,7 +315,8 @@ class Neo4jConnection:
 
     def save_nodes_as_json(
         self,
-        path: str
+        path: str,
+        doc_id: str
     ) -> None:
         """
         Saves the nodes as a JSON file
@@ -300,13 +325,16 @@ class Neo4jConnection:
         ----------
         path : str
             The path to the JSON file
+        doc_id : str
+            The ID of the document.
 
         Returns
         -------
         None
         """
-        query = """
+        query = f"""
         MATCH (n)
+        WHERE n.doc_id = {doc_id}
         RETURN n
         """
         result = self.query(query)
