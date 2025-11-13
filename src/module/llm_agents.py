@@ -19,6 +19,7 @@ from . import utils
 class PromptCreater(LLMAgent):
     def __init__(
         self,
+        doc_id: str,
         prompt_handcrafted_folder: str,
         prompt_folder_to_save: str,
         api_key: str,
@@ -1179,7 +1180,7 @@ class MetaPrompterIndependent(MetaPrompter):
         <text>{text}</text>
         <correct_solution>{json.dumps(correct_solutions)}</correct_solution>
         <wrong_solution>{json.dumps(wrong_solutions)}</wrong_solution>
-        <pii_name**>{pii_name}</pii_name>
+        <pii_name>{pii_name}</pii_name>
         <pii_description>{pii_dict["description"]}</pii_description>
         """
         conversation_list = [{"role": "user", "content": user_prompt}]
@@ -1359,7 +1360,7 @@ class MetaPrompterIndividuals(MetaPrompter):
         """
         user_prompt = textwrap.dedent(f"""
         <persons>{self.read_persons()}</persons>
-        <soltions>{solution}</solutions>
+        <solutions>{solution}</solutions>
         """)
         conversation_list = [{"role": "user", "content": user_prompt}]
         return self.send_prompt(
@@ -2182,12 +2183,10 @@ class MetaExpertConversation():
                     print(f"Retrying Verify for: {self.pii_name}")
                     print(parsed)
                     print(value)
-                    # IMPORTANT: propagate the retry result
                     return self.retry_verify(pii_dict=pii_dict)
         except AttributeError:
             return self.retry_verify(pii_dict=pii_dict)
 
-        # IMPORTANT: return the dict, not the original string
         return temp_result
 
     def verify_solution(

@@ -9,3 +9,5 @@ src/cli/__pycache__/*
 Data/Other/*
 src/module/__pycache__/*
 Data/texts/*
+log/*.log
+src/evaluate/__pycache__/*.pyc

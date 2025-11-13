@@ -52,7 +52,7 @@ class Neo4jConnection:
 
         query = f"""
         MATCH (designation:Entity_designation)
-        WHERE designation.doc = {doc_id}
+        WHERE designation.doc_id = "{doc_id}"
         RETURN designation
         """
         result = self.query(query)
@@ -108,7 +108,7 @@ class Neo4jConnection:
                 ON CREATE SET p.uuid = pii.uuid
                 SET p.identifier = pii.identifier
                 SET p.context = pii.context
-                SET p.doc_id = {doc_id}
+                SET p.doc_id = "{doc_id}"
             """
 
             self.query(
@@ -307,7 +307,7 @@ class Neo4jConnection:
         """
         query = f"""
         MATCH (n:{category})
-        WHERE n.doc_id = {doc_id}
+        WHERE n.doc_id = "{doc_id}"
         DETACH DELETE n
         RETURN n
         """
@@ -334,7 +334,7 @@ class Neo4jConnection:
         """
         query = f"""
         MATCH (n)
-        WHERE n.doc_id = {doc_id}
+        WHERE n.doc_id = "{doc_id}"
         RETURN n
         """
         result = self.query(query)

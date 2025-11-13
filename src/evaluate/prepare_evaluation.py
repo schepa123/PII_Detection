@@ -252,15 +252,17 @@ def save_text_from_docs(doc_json_path: str) -> None:
 
 def add_regex_search(
     conn: neo4j_conn.Neo4jConnection,
-    texts_path,
+    text_path,
     result_path,
     doc_id: str
 ) -> list[list[int]]:
+    print(f"add_regex_search result_path: {result_path}")
+    print(f"add_regex_search text_path: {text_path}")
     positions_to_add = []
     query = f"""
     MATCH (n)
     WHERE n:Nationality_Ethnicity OR n:Facility OR n:Organization OR n:Named_Location
-    AND n.doc_id = {doc_id}
+    AND n.doc_id = "{doc_id}"
     RETURN n;
     """
     query_result = conn.query(query=query)
@@ -269,27 +271,19 @@ def add_regex_search(
     for data in query_result:
         temp.append(next(iter(data.data().values())))
     identifiers = list(set([element["identifier"] for element in temp]))
-    files = [
-        f for f in os.listdir(texts_path)
-        if os.path.isfile(os.path.join(texts_path, f))
-    ]
 
-    # For loop über alle Dokumente in /Data/texts/
-    for file in files:
-        text = cli_helper.read_text_file(os.path.join(
-            texts_path,
-            file
-        ))
-        text = _replace_characters(text).\
-            replace("\u00A0", " ").\
-            replace("\u00AD", "")
-        results = []
+    text = cli_helper.read_text_file(text_path)
+    text = _replace_characters(text).\
+        replace("\u00A0", " ").\
+        replace("\u00AD", "")
+    results = []
 
-        with open(result_path, "r") as f:
-            nodes_json = json.load(f)
-        list_position_llm = nodes_json[list(nodes_json.keys())[0]]
+    with open(result_path, "r") as f:
+        nodes_json = json.load(f)
+    list_position_llm = nodes_json[list(nodes_json.keys())[0]]
 
-        for ident in identifiers:
+    for ident in identifiers:
+        try:
             print(ident)
             regex_ident = _build_flexible_context_regex(ident)
             search_result = regex_ident.search(text)
@@ -298,10 +292,12 @@ def add_regex_search(
                 "start": start,
                 "end": end
             })
+        except AttributeError as e:
+            print(f"add_regex_search AttributeError for {ident}. {e}")
 
-        for element in results:
-            temp_position = [element["start"], element["end"]]
-            if temp_position not in list_position_llm:
-                positions_to_add.append(temp_position)
+    for element in results:
+        temp_position = [element["start"], element["end"]]
+        if temp_position not in list_position_llm:
+            positions_to_add.append(temp_position)
 
     return positions_to_add

@@ -114,7 +114,7 @@ class MetaExpertConversation():
 
         query = f"""
         MATCH (designation:Entity_designation)
-        WHERE designation.doc_id = {self.doc_id}
+        WHERE designation.doc_id = "{self.doc_id}"
         RETURN designation
         """
         result = self.conn.query(query)

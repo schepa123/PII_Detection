@@ -44,6 +44,29 @@ def set_up_argparse():
         help="Number of text to get."
     )
 
+    parser.add_argument(
+        "--refine",
+        type=int,
+        required=True,
+        help="Whether to refine the prompts or not."
+    )
+
+    parser.add_argument(
+        "--generate_new_prompt",
+        type=int,
+        required=True,
+        help="Whether to create a new prompt at every step or not."
+    )
+
+    parser.add_argument(
+        "--file",
+        type=str,
+        nargs="+",
+        required=False,
+        help="One or more files to process (space-separated)."
+    )
+
+
     return parser
 
 
@@ -122,36 +145,36 @@ def create_folder_generated_prompts(
     Returns:
         None.
     """
-    os.makedirs(prompt_folder_to_save)
-    os.makedirs(os.path.join(prompt_folder_to_save, "independent"))
-    prompt_folder_to_save = os.path.join(
-        prompt_folder_to_save,
-        "independent"
-    )
-
-    os.makedirs(os.path.join(prompt_folder_to_save, "age_number"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "charges"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "code"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "court_case_name"))
-    os.makedirs(os.path.join(
-        prompt_folder_to_save, "Crime_Related_Circumstances")
-    )
-    os.makedirs(os.path.join(prompt_folder_to_save, "date"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "duration"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "facility"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "health"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "item"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "job_title"))
-    os.makedirs(os.path.join(
-        prompt_folder_to_save, "laws_legal_provisions_Name_Number")
-    )
-    os.makedirs(os.path.join(prompt_folder_to_save, "named_location"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "Nationality_Ethnicity"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "organization"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "political_stance"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "quantity"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "real_estate"))
-    os.makedirs(os.path.join(prompt_folder_to_save, "realative_time"))
+    if not os.path.exists(prompt_folder_to_save):
+        os.makedirs(prompt_folder_to_save)
+        os.makedirs(os.path.join(prompt_folder_to_save, "independent"))
+        prompt_folder_to_save = os.path.join(
+            prompt_folder_to_save,
+            "independent"
+        )
+        os.makedirs(os.path.join(prompt_folder_to_save, "age_number"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "charges"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "code"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "court_case_name"))
+        os.makedirs(os.path.join(
+            prompt_folder_to_save, "Crime_Related_Circumstances")
+        )
+        os.makedirs(os.path.join(prompt_folder_to_save, "date"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "duration"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "facility"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "health"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "item"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "job_title"))
+        os.makedirs(os.path.join(
+            prompt_folder_to_save, "laws_legal_provisions_Name_Number")
+        )
+        os.makedirs(os.path.join(prompt_folder_to_save, "named_location"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "Nationality_Ethnicity"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "organization"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "political_stance"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "quantity"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "real_estate"))
+        os.makedirs(os.path.join(prompt_folder_to_save, "realative_time"))
 
 
 def read_text_file(file_path) -> str:
@@ -240,7 +263,8 @@ async def extract_pii_dynamic(
     api_key_meta_expert: str,
     conn: neo4j_conn.Neo4jConnection,
     temperature: float,
-    refine_prompts: bool
+    refine_prompts: bool,
+    generate_new_prompt: bool
 ) -> None:
     """
     Extract PII using dynamic methods with a concurrency limit of 4.
@@ -286,6 +310,7 @@ async def extract_pii_dynamic(
                 guidelines_path_issue=guidelines_path_issue,
                 guidelines_path_verify=guidelines_path_verify,
                 conn=conn,
+                generate_new_prompt=generate_new_prompt,
                 refine_prompts=refine_prompts,
                 temperature=temperature,
                 base_url=base_url,
@@ -356,13 +381,14 @@ async def run_pii(
     api_key_prompt_creater: str,
     api_key_meta_expert: str,
     temperature: float,
+    generate_new_prompt: bool,
     refine_prompts: bool
 ):
     """
     123
     """
     text = read_text_file(file_path)
-    pri
+    print(f"file_path for run_pii: {file_path}")    
     doc_id = file_path.split(".")[0].split("/")[-1]
     print(f"Start dynamic PIIs for doc: {doc_id}")
     await extract_pii_dynamic(
@@ -375,9 +401,10 @@ async def run_pii(
         conn=conn,
         temperature=temperature,
         refine_prompts=refine_prompts,
+        generate_new_prompt=generate_new_prompt,
         doc_id=doc_id
     )
-    print("Finished dynamic PIIs for doc: {doc_id}")
+    print(f"Finished dynamic PIIs for doc_id: {doc_id}")
     print("Start static PIIs")
     extract_pii_static(
         text=text,
@@ -404,20 +431,21 @@ async def run_pii(
         original_text=text,
         doc_id=doc_id
     )
+    position_path = os.path.join(
+        output_path, f"{doc_id}_positions.json"
+    )
+    with open(position_path, "w") as f:
+        json.dump(position_dict, f)
+
     temp_to_add = prepare_evaluation.add_regex_search(
         conn=conn,
-        texts_path=file_path,
-        result_path=result_path,
+        text_path=file_path,
+        result_path=position_path,
         doc_id=doc_id
     )
     position_dict[doc_id].extend(temp_to_add)
     position_dict = prepare_evaluation.merge_overlapping_elements(
         position_dict
     )
-    print(f"position_dict {doc_id}: {position_dict}")
-    with open(os.path.join(
-        output_path, f"{doc_id}_positions.json"
-    ), "w") as f:
-        json.dump(position_dict, f)
 
     logger.info(f"Finished {doc_id}")

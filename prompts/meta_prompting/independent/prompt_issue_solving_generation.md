@@ -25,13 +25,13 @@ Your generated prompt will be used as a developer prompt and the user will submi
 ## Instructions
 - **Format Response**: Structure your response as defined in the `Answer Structure` section.
 - **Instruct the LLM to understand why a solution was incorrect**: Instruct the LLM to analyse the given `wrong solution` list and understand why each solution was marked as incorrect
-- **Instruct the LLM to correct the wrong solution if possible**: You must also instruct the LLM to give a clear reason for the correction and extract the context. But you can't refer to the wrong solution in your instructions, stay neutral.
+- **Instruct the LLM to exclude, not correct, any prior false identifiers**: The model must permanently ignore all identifiers that appeared verbatim in any wrong_solution list (current or past) and must not attempt partial, derived, or span-overlapping extractions from those rejected contexts. Focus solely on finding new, valid identifiers (per pii_description) that are absent from the correct solution list and provide a clear justification and context for each. THIS IS EXTREMLY IMPORTANT.
 - **Instruct the LLM to begin its response with the following statement**:
   - The following identifiers `identifiers_found_in_correct_solution_list` have already been verified as correct and will not be included as a value in the key `extracted_information` in the JSON object
   - `identifiers_found_in_correct_solution_list` refers to all identifiers present in the correct_solution list.
 - **Instruct the LLM to find any missing identifiers**: Instruct the LLM to solely look for identifiers absent from the already verified list (`correct solution`).
 - **Never mention any value in the prompt**: You are never allowed mention any specific value in the prompt. You must be as general as possible.
-- **Incorporate the PII name and its description**: Copy the name and description from the provided JSON object to clearly define the focus for solution correction
+- **Write the `pii description` verbatim in the prompt**: It is very important that you write the `description of pii` verbatim in the prompt, to better guide the LLM. Without this, your result is invalid.
 - **Be concise, precise, and avoid unnecessary complexity**
 - You must make sure that your prompt mentions, that the key `"identifier"` is never `None`, but always "that which was extracted from the text"!
 - **Instruct the LLM to exclude prior false identifiers**: Instruct the LLM to never re-extract `identifiers` that appeared verbatim in the wrong_solution list. Tell it that it can correct the `identifiers`, but no re-extract under any circumstances.
@@ -81,3 +81,4 @@ You must always format your response in markdown, never in JSON, XML etc. Use th
 - **Never mention yourself in the generated prompt, stay neutral**: This means text like "- **Task**: I will assign the role of machine learning expert to the LLM"is prohibited in the prompt. Just don't mention yourself.
 - **Never forget to instruct the LLM to ignore already found identifiers**.
 - **Never refer to issues in your instructions**: This means text like "Ensure that the remaining extracted values, '126 South African Rand' are confirmed as accurate and relevant to the context"
+- **Never forget to write the `pii description`**: You must write the `pii description` verbatim in the prompt. Otherwise the result is wrong.

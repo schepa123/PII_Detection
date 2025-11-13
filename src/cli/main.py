@@ -44,6 +44,9 @@ async def main():
     logger.info("Loading environment variables")
     parser = cli_helper.set_up_argparse()
     args = parser.parse_args()
+    refine = True if args.refine == 1 else False
+    generate_new_prompt = True if args.generate_new_prompt == 1 else False
+
     conn = neo4j_conn.Neo4jConnection(
         uri="bolt://neo4j:7687",
         user="neo4j",
@@ -68,32 +71,65 @@ async def main():
         save_path=args.output_path
     )
 
-    files = [
-        f for f in os.listdir(args.output_path)
-        if os.path.isfile(os.path.join(args.output_path, f))
-    ]
+    if args.file is not None:
+        files = args.file
+    else:
+        files = [
+            f for f in os.listdir(args.output_path)
+            if os.path.isfile(os.path.join(args.output_path, f))
+        ]
 
-    sem = asyncio.Semaphore(3)
+    print(files)
+
+    sem = asyncio.Semaphore(5)
 
     async def sem_task(file_name):
         async with sem:
             file_path = os.path.join(args.output_path, file_name)
-            return await cli_helper.run_pii(
-                file_path=file_path,
-                output_path=args.output_path,
-                conn=conn,
-                base_url=BASE_URL,
-                model_name_prompt_creater=MODEL_PROMPT_CREATER,
-                model_name_meta_expert=MODEL_DYNAMIC,
-                api_key_prompt_creater=API_KEY,
-                api_key_meta_expert=API_KEY,
-                temperature=TEMPERATURE,
-                refine_prompts=True,
-            )
+            try:
+                return await cli_helper.run_pii(
+                    file_path=file_path,
+                    output_path=args.output_path,
+                    conn=conn,
+                    base_url=BASE_URL,
+                    model_name_prompt_creater=MODEL_PROMPT_CREATER,
+                    model_name_meta_expert=MODEL_DYNAMIC,
+                    api_key_prompt_creater=API_KEY,
+                    api_key_meta_expert=API_KEY,
+                    temperature=TEMPERATURE,
+                    refine_prompts=refine,
+                    generate_new_prompt=generate_new_prompt
+                )
+            except Exception as e:
+                logger.error(f"Failed to process {file_name}: {e}")
+                # Optionally, you could log the traceback for debugging
+                import traceback
+                logger.debug(traceback.format_exc())
+                # Return a placeholder or None so asyncio.gather continues
+                return None
 
     # Run all PII tasks with concurrency cap of 3
     await asyncio.gather(*(sem_task(f) for f in files))
     logger.info("All files processed.")
+
+    position_files = [
+        f for f in os.listdir(args.output_path)
+        if os.path.isfile(os.path.join(args.output_path, f))
+    ]
+
+    position_dict_list = []
+    for file in position_files:
+        if not file.endswith("_positions.json"):
+            continue
+        with open(os.path.join(args.output_path, file), "r") as f:
+            position_dict_list.append(
+                json.load(f)
+            )
+
+    with open(os.path.join(args.output_path, "final.json"), "w") as f:
+        json.dump(
+            prepare_evaluation.combine(position_dict_list), f
+        )
 
 
 

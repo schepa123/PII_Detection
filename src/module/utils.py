@@ -279,7 +279,7 @@ def extract_instruction(
 
 def split_text(
     text: str,
-    paragraphs_to_merge: int = 2
+    paragraphs_to_merge: int = 4
 ) -> list[str]:
     """
     Splits the text into paragraphs and merges them
@@ -411,6 +411,7 @@ def extract_pii_dynamic(
     guidelines_path_verify: str,
     conn: Neo4jConnection,
     refine_prompts=False,
+    generate_new_prompt: bool = False,
     temperature: float = 0.5,
 ) -> None:
     """
@@ -457,6 +458,8 @@ def extract_pii_dynamic(
         The connection to the Neo4j database
     refine_prompts : bool
         If True, the prompts will be refined
+    generate_new_prompt: bool
+        IF True, a new prompt will be generated at every step
     temperature : float
         The temperature to use for the model
 
@@ -471,6 +474,7 @@ def extract_pii_dynamic(
         )
     text_splitted = split_text(text)
     prompt_creater = llm_agents.PromptCreater(
+        doc_id=doc_id,
         prompt_handcrafted_folder=prompt_handcrafted_folder,
         prompt_folder_to_save=prompt_folder_to_save,
         api_key=api_key_prompt_creater,
@@ -496,14 +500,14 @@ def extract_pii_dynamic(
         temperature=temperature
     )
     for i, text in enumerate(text_splitted):
-        print(f"{pii_name}: Processing text {i+1}/{len(text_splitted)}")
+        print(f"Doc ({doc_id}) {pii_name}: Processing text {i+1}/{len(text_splitted)}")
         logger.info(f"\n\nProcessing text for {pii_name}: {text}")
         conv = llm_agents.MetaExpertConversationIndependet(
             agent=agent_independent,
             prompt_generator=prompt_creater,
             text=text,
             generated_prompt_folder=prompt_folder_to_save,
-            generate_new_prompt=False,
+            generate_new_prompt=generate_new_prompt,
             pii_name=pii_name,
             guidelines_path_extracting=guidelines_path_extracting,
             guidelines_path_issue=guidelines_path_issue,
